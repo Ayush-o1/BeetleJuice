@@ -5,7 +5,10 @@
  * seeds the demo users and (with --load-sample) ingests the demo files, runs a reconciliation and
  * leaves a few proposals in different states.
  *
- *   npm run demo:reset -- --yes [--load-sample]
+ *   npm run demo:reset -- --yes [--load-sample] [--scenario <name> [--size small|normal|large|xl] [--seed N]]
+ *
+ * --load-sample alone loads the original November demo files. With --scenario it loads that generated scenario
+ * instead (see docs/data-scenarios.md); the sample proposals are only created for the original demo files.
  *
  * This is destructive by design, so it has four independent guards. It refuses to run unless:
  *   1. NODE_ENV is not "production";
@@ -53,11 +56,26 @@ function refuse(reason) {
     for (const [username, role, displayName] of DEMO_USERS) await users.create(pool, { username, displayName, role, passwordHash: hash });
     console.log(`Seeded ${DEMO_USERS.length} demo users (password: ${DEMO_PASSWORD}).`);
 
-    if (process.argv.includes('--load-sample')) await loadSample(ctx);
+    if (argValue('scenario')) await loadScenario(ctx, argValue('scenario'));
+    else if (process.argv.includes('--load-sample')) await loadSample(ctx);
   } finally {
     await pool.end();
   }
 })().catch((err) => { console.error(err); process.exit(1); });
+
+const argValue = (name) => { const i = process.argv.indexOf(`--${name}`); return i >= 0 ? process.argv[i + 1] : undefined; };
+
+async function loadScenario(ctx, name) {
+  const { generateScenario } = require('./lib/scenario-library');
+  const size = argValue('size') || 'normal';
+  const g = generateScenario(name, { size, seed: argValue('seed') ? Number(argValue('seed')) : undefined });
+  const analyst = { user: await users.findByUsername(ctx.pool, 'analyst'), ip: null, requestId: 'demo-reset' };
+  const l = await sources.ingest(ctx, analyst, { kind: 'ledger', filename: `${name}-${size}-ledger.csv`, buffer: Buffer.from(g.ledgerCsv) });
+  const s = await sources.ingest(ctx, analyst, { kind: 'settlement', filename: `${name}-${size}-settlement.csv`, buffer: Buffer.from(g.settlementCsv) });
+  const run = await runs.createRun(ctx, analyst, { ledgerFileId: l.file.id, settlementFileId: s.file.id, asOfDate: g.expected.asOfDate });
+  await createWorker(ctx).processNext();
+  console.log(`Loaded scenario "${name}" (${size}) and completed run #${run.id}: expect ${g.expected.transactions.matched} matched, ${g.expected.transactions.pending} pending, ${g.expected.totalBreaks} breaks.`);
+}
 
 async function loadSample(ctx) {
   const actorFor = async (name) => ({ user: await users.findByUsername(ctx.pool, name), ip: null, requestId: 'demo-reset' });

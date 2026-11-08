@@ -1,0 +1,47 @@
+{
+  "scenario": "duplicate-references",
+  "size": "small",
+  "seed": 20261108,
+  "asOfDate": "2026-11-08",
+  "settings": {
+    "settlementWindowDays": 2,
+    "feeRatePercent": "2.0000",
+    "feeTolerancePaise": 1,
+    "amountTolerancePaise": 0
+  },
+  "ledgerRows": {
+    "total": 15,
+    "accepted": 15,
+    "rejected": 0
+  },
+  "settlementRows": {
+    "total": 25,
+    "accepted": 25,
+    "rejected": 0
+  },
+  "rejectedCodes": {
+    "ledger": [],
+    "settlement": []
+  },
+  "transactions": {
+    "matched": 13,
+    "pending": 0,
+    "breaks": 4
+  },
+  "breaksByType": {
+    "AMOUNT_MISMATCH": 0,
+    "DUPLICATE_SETTLEMENT": 1,
+    "MISSING_IN_LEDGER": 0,
+    "MISSING_IN_SETTLEMENT": 0,
+    "BATCH_PAYOUT_MISMATCH": 0,
+    "FEE_VARIANCE": 0,
+    "AMBIGUOUS_REFERENCE": 3
+  },
+  "batches": {
+    "total": 10,
+    "matched": 10,
+    "broken": 0,
+    "brokenIds": []
+  },
+  "totalBreaks": 4
+}

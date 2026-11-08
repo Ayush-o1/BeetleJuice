@@ -17,6 +17,7 @@
     "db:create": "node scripts/create-db.js",
     "user:create": "node scripts/create-user.js",
     "demo:generate": "node scripts/generate-demo-data.js",
+    "demo:scenarios": "node scripts/generate-scenarios.js",
     "demo:reset": "node scripts/demo-reset.js",
     "bench": "node scripts/benchmark.js",
     "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
