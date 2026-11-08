@@ -26,6 +26,8 @@ const schema = z.object({
   RUN_LEASE_SECONDS: int(5, 3600).default(120),
   // scrypt cost. OWASP minimum is N=2^17; lowering is only honoured outside production.
   SCRYPT_LOG2_N: int(10, 20).default(17),
+  LOGIN_RATE_MAX: int(1, 100000).default(20),
+  LOGIN_RATE_WINDOW_MINUTES: int(1, 1440).default(15),
 });
 
 /**
@@ -60,6 +62,8 @@ function loadConfig(env = process.env) {
     runMaxAttempts: e.RUN_MAX_ATTEMPTS,
     runLeaseSeconds: e.RUN_LEASE_SECONDS,
     scryptLog2N: e.SCRYPT_LOG2_N,
+    loginRateMax: e.LOGIN_RATE_MAX,
+    loginRateWindowMs: e.LOGIN_RATE_WINDOW_MINUTES * 60000,
   });
 }
 

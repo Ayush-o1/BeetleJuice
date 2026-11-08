@@ -51,4 +51,16 @@ async function migrate(pool, { log = () => {} } = {}) {
   }
 }
 
-module.exports = { migrate };
+/** Names of migration files that have not been applied yet (used by the startup check). */
+async function pendingMigrations(pool) {
+  const files = (await fs.readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith('.sql')).sort();
+  let applied = new Set();
+  try {
+    applied = new Set((await pool.query('SELECT name FROM schema_migrations')).rows.map((r) => r.name));
+  } catch (err) {
+    if (err.code !== '42P01') throw err; // 42P01 = table does not exist yet
+  }
+  return files.filter((f) => !applied.has(f));
+}
+
+module.exports = { migrate, pendingMigrations };
