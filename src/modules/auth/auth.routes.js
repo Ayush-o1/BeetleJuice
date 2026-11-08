@@ -32,6 +32,11 @@ function authRoutes(ctx) {
     res.status(204).end();
   });
 
+  // Used by the page on load: answers 200 with null when signed out, so a logged-out visit is not an error.
+  router.get('/session', (req, res) => {
+    res.json({ data: req.user ? { user: req.user, csrfToken: req.session.csrfToken, permissions: permissionsFor(req.user.role) } : null });
+  });
+
   router.get('/me', requireAuth, (req, res) => {
     res.json({ data: { user: req.user, csrfToken: req.session.csrfToken, permissions: permissionsFor(req.user.role) } });
   });

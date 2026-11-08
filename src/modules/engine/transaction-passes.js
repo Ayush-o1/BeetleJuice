@@ -188,7 +188,7 @@ function passMissingSettlement(groups, cfg, out) {
         scope: 'TRANSACTION', outcome: 'BREAK', breakType: 'MISSING_IN_SETTLEMENT', ruleId: 'R06',
         ledgerEntryId: l.id, settlementLineId: null, reference: l.reference, groupKey: g.key,
         amountDiffPaise: null, impactPaise: Math.abs(l.amountPaise), referenceDate: l.businessDate,
-        explanation: `${ledgerLabel(l)} recorded ${l.businessDate} was not settled by ${deadline}, the end of its `
+        explanation: `Ledger ${ledgerLabel(l).slice('ledger '.length)} recorded ${l.businessDate} was not settled by ${deadline}, the end of its `
           + `${cfg.settlementWindowDays}-day settlement window (run as of ${cfg.asOfDate}).`,
         details: { settlementDeadline: deadline, asOfDate: cfg.asOfDate },
       });

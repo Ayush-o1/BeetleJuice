@@ -12,7 +12,11 @@ const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =
 for (const root of roots) {
   if (!fs.existsSync(root)) continue;
   for (const file of walk(root)) {
-    try { execFileSync(process.execPath, ['--check', file], { stdio: 'pipe' }); } catch (e) { failed++; console.error(`${file}\n${e.stderr}`); }
+    try {
+      // Browser code under public/ is ES modules; everything else is CommonJS.
+      if (root === 'public') execFileSync(process.execPath, ['--input-type=module', '--check'], { input: fs.readFileSync(file), stdio: ['pipe', 'pipe', 'pipe'] });
+      else execFileSync(process.execPath, ['--check', file], { stdio: 'pipe' });
+    } catch (e) { failed++; console.error(`${file}\n${e.stderr}`); }
   }
 }
 if (failed) process.exit(1);

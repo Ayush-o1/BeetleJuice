@@ -35,8 +35,11 @@ function createApp(ctx) {
         defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'"], imgSrc: ["'self'", 'data:'],
         fontSrc: ["'self'"], connectSrc: ["'self'"], objectSrc: ["'none'"], baseUri: ["'self'"],
         formAction: ["'self'"], frameAncestors: ["'none'"],
+        // Only force https when we are actually served over it; plain-http dev/LAN use must keep working.
+        upgradeInsecureRequests: config.cookieSecure ? [] : null,
       },
     },
+    strictTransportSecurity: config.cookieSecure ? undefined : false,
     referrerPolicy: { policy: 'same-origin' },
   }));
 
