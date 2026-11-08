@@ -1,6 +1,6 @@
 {
   "name": "beetlejuice",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "BeetleJuice — settlement reconciliation and break management for payment operations (synthetic-data simulation).",
   "private": true,
   "license": "MIT",
@@ -20,6 +20,7 @@
     "demo:scenarios": "node scripts/generate-scenarios.js",
     "demo:reset": "node scripts/demo-reset.js",
     "bench": "node scripts/benchmark.js",
+    "screenshots": "node scripts/capture-screenshots.js",
     "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
     "test:unit": "node --test \"test/unit/**/*.test.js\"",
     "test:integration": "node --test --test-concurrency=1 \"test/integration/**/*.test.js\"",

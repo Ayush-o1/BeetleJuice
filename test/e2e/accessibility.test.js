@@ -56,6 +56,7 @@ test('axe: login screen, an open modal dialog and the open Display menu are clea
     for (const v of await axeViolations(page)) found.push(`login/${colorScheme}: ${v}`);
     await ctx.close();
     const { ctx: c2, page: p2 } = await open('supervisor', { colorScheme });
+    await settle(p2);
     await p2.click('button[aria-label="Display settings"]');
     await p2.waitForSelector('#display-menu:popover-open');
     for (const v of await axeViolations(p2)) found.push(`display-menu/${colorScheme}: ${v}`);
@@ -133,16 +134,22 @@ test('keyboard: a decision dialog traps focus, Escape cancels without deciding, 
   await page.goto(`${app.base}/#/review`); await settle(page);
   await page.click('td a.ref'); await page.waitForSelector('button:has-text("Approve")'); await settle(page);
   await page.focus('button:has-text("Approve")');
+  const focused = await page.evaluate(() => document.activeElement?.textContent?.trim());
+  assert.match(focused || '', /Approve/, `the Approve button must hold focus before Enter (active element: ${focused})`);
   await page.keyboard.press('Enter');
-  await page.waitForSelector('dialog[open]');
+  await page.waitForSelector('dialog[open]', { timeout: 5000 }).catch(async (e) => {
+    const state = await page.evaluate(() => ({ hash: location.hash, active: document.activeElement?.outerHTML?.slice(0, 120), buttons: [...document.querySelectorAll('button')].map((b) => `${b.textContent.trim()}${b.disabled ? '(disabled)' : ''}${b.dataset.busy ? '(busy)' : ''}`).join('|'), dialogs: document.querySelectorAll('dialog').length }));
+    throw new Error(`Enter on Approve did not open the dialog: ${JSON.stringify(state)} / ${e.message}`);
+  });
   // A native modal makes the page behind it inert. Tabbing past the last control may hand focus to the browser's own
   // UI (document.body here), but it must never land on anything behind the dialog.
   for (let i = 0; i < 8; i++) {
     await page.keyboard.press('Tab');
     assert.equal(await page.evaluate(() => document.activeElement === document.body || Boolean(document.activeElement.closest('dialog'))), true, 'focus never reaches the inert page behind the dialog');
   }
+  await page.focus('dialog textarea');             // tabbing may have moved focus to the browser UI; Escape needs focus inside the page
   await page.keyboard.press('Escape');
-  await page.waitForFunction(() => !document.querySelector('dialog[open]'));
+  await page.waitForFunction(() => !document.querySelector('dialog'));
   assert.match(await page.evaluate(() => document.activeElement.textContent), /Approve/);
   assert.equal(await page.locator('button:has-text("Approve")').count(), 1, 'nothing was decided');
   await ctx.close();
@@ -179,6 +186,34 @@ test('zoom: at 200% (720 CSS px wide) and 400% (360 CSS px) the page does not ne
     }
     await ctx.close();
   }
+});
+
+test('target size (WCAG 2.2 AA 2.5.8): every button, field, select and summary is at least 24 x 24 CSS px', async (t) => {
+  if (skipReason) return t.skip(skipReason);
+  const { ctx, page } = await open('supervisor');
+  const small = [];
+  for (const route of ['/', '/breaks?type=AMOUNT_MISMATCH', '/breaks/1', '/review', '/sources', '/runs/1', '/audit', '/settings']) {
+    await page.goto(`${app.base}/#${route}`); await page.waitForSelector('h1'); await settle(page);
+    small.push(...(await page.evaluate(() => [...document.querySelectorAll('button, select, textarea, summary, input:not([type=checkbox]):not([type=radio]):not([type=file])')]
+      .filter((e) => e.getBoundingClientRect().width > 0 && !e.closest('.sr-only'))
+      .map((e) => { const r = e.getBoundingClientRect(); return { el: `${e.tagName.toLowerCase()}.${String(e.className).split(' ')[0]}`, w: Math.round(r.width), h: Math.round(r.height) }; })
+      .filter((x) => x.w < 24 || x.h < 24))).map((x) => `${route}: ${x.el} ${x.w}x${x.h}`));
+  }
+  await ctx.close();
+  assert.deepEqual([...new Set(small)], []);
+});
+
+test('focus is never hidden behind the sticky top bar when tabbing down a long list (WCAG 2.2 AA 2.4.11)', async (t) => {
+  if (skipReason) return t.skip(skipReason);
+  const { ctx, page } = await open('auditor');
+  await page.goto(`${app.base}/#/audit`); await page.waitForSelector('tbody a'); await settle(page);
+  await page.focus('tbody a >> nth=0');
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press('Tab');
+    const covered = await page.evaluate(() => { const r = document.activeElement.getBoundingClientRect(); const bar = document.querySelector('.topbar').getBoundingClientRect(); return r.height > 0 && r.top < bar.bottom - 1 && r.bottom > bar.top; });
+    assert.equal(covered, false, `focus reached an element under the top bar on tab ${i + 1}`);
+  }
+  await ctx.close();
 });
 
 test('no unexpected browser console errors during the accessibility run', (t) => {

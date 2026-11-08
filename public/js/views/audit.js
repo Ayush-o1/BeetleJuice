@@ -2,7 +2,7 @@ import { h, clear, debounce } from '../dom.js';
 import { api, exportUrl } from '../api.js';
 import { route, setQuery } from '../router.js';
 import { asyncRegion, pageHead, button, dataTable, tableFoot, emptyState, field, select, roleBadge } from '../ui.js';
-import { formatDateTime } from '../format.js';
+import { formatDateTime, ROLES } from '../format.js';
 import { describeEvent, actorLabel } from '../audit-text.js';
 
 const KEYS = ['action', 'entityType', 'actor', 'runId', 'breakId', 'from', 'to', 'hide'];
@@ -43,7 +43,7 @@ route('/audit', async ({ container, query }) => {
       caption: 'Audit events',
       columns: [
         { label: 'When', render: (e) => h('span', { class: 'nowrap' }, formatDateTime(e.occurredAt)) },
-        { label: 'Who', render: (e) => (e.actor ? h('div', null, actorLabel(e), h('span', { class: 'cell-sub' }, `${e.actor} · ${e.actorRole}`)) : h('span', { class: 'muted' }, 'System')) },
+        { label: 'Who', render: (e) => (e.actor ? h('div', null, actorLabel(e), h('span', { class: 'cell-sub' }, `@${e.actor} · ${ROLES[e.actorRole] || e.actorRole}`)) : h('span', { class: 'muted' }, 'System')) },
         { label: 'What happened', class: 'wrap', render: (e) => { const d = describeEvent(e); return h('div', null, h('span', { class: `evt evt-${d.tone}` }, d.text), h('span', { class: 'cell-sub ref' }, e.action)); } },
         { label: 'Related', render: (e) => subject(e) },
         { label: 'Technical', render: (e) => detail(e) },

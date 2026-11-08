@@ -79,3 +79,16 @@ All phases were completed in one working session and verified before each commit
 * A self-approval audit write inside the decision transaction would have deadlocked on the row lock it held.
 * The demo generator planted a "duplicate line id" row before the original; the parser was right, the generator was wrong.
 * `.figure.alert` collided with the `.alert` component class (visual bug); search input's accessible name differed from its label.
+
+## v1.1.0 refinement
+
+A second pass on the finished v1.0.0, planned from an audit of the running product rather than from the source alone. Order of work, each a verified milestone:
+
+1. **Audit and research** → [refinement/audit.md](refinement/audit.md), [refinement/research.md](refinement/research.md) (what to keep, what was broken, what was deliberately left out).
+2. **Defects and accessibility** (clipped review table, stepper structure, contrast, double tab stops, phone tables) and **design tokens + dark theme** ([ADR 0012](decisions/0012-theme-tokens-and-dark-mode.md), [0013](decisions/0013-tables-as-cards-on-phones.md)).
+3. **Workflow**: readable audit log, ageing and activity on the overview, queue navigation and guidance, find-a-reference, upload progress and templates ([ADR 0014](decisions/0014-reference-trace-and-queue-context.md)).
+4. **Data**: the scenario library with constructed expectations ([ADR 0015](decisions/0015-scenario-library-constructed-expectations.md), [data-scenarios.md](data-scenarios.md)).
+5. **Tests**: browser workflows, accessibility, edge cases, migrations on an empty database, scenario invariants. **Performance** re-measured including the API and browser rendering.
+6. **Documentation, screenshots, release.**
+
+Explicitly *not* done: run-to-run comparison, more charts, saved filters, PDF reports, fuzzy reference search. Reasons are in the audit.
