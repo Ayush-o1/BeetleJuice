@@ -135,29 +135,31 @@ export function asyncRegion(region, { load, render, loading = () => skeleton() }
 
 /* ---------- tables ---------- */
 
-export function dataTable({ caption, columns, rows, sort, onSort, rowHref, emptyNode }) {
+export function dataTable({ caption, columns, rows, sort, onSort, rowHref, emptyNode, stack = true }) {
   if (!rows.length && emptyNode) return emptyNode;
   const [sortKey, sortDir] = (sort || '').split(':');
-  const head = h('tr', null, columns.map((c) => {
-    const th = h('th', { scope: 'col', class: `${c.align === 'num' ? 'num ' : ''}${c.hideSm ? 'hide-sm' : ''}` });
+  const hidden = (c) => (c.hideSm ? 'hide-sm' : '');
+  const head = h('tr', { role: 'row' }, columns.map((c) => {
+    const th = h('th', { scope: 'col', role: 'columnheader', class: `${c.align === 'num' ? 'num ' : ''}${hidden(c)}`.trim() });
     if (c.sortKey && onSort) {
       const active = sortKey === c.sortKey;
       th.setAttribute('aria-sort', active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none');
       th.append(h('button', { class: 'th-sort', type: 'button', onclick: () => onSort(c.sortKey, active && sortDir !== 'asc' ? 'asc' : 'desc') }, c.label, icon('sort')));
-    } else th.append(c.label);
+    } else if (c.label) th.append(c.label);
+    else th.append(h('span', { class: 'sr-only' }, c.srLabel || 'Actions'));
     return th;
   }));
-  const body = rows.map((row) => {
+  const body = rows.map((row, i) => {
     const href = rowHref?.(row);
-    const tr = h('tr', href ? { class: 'clickable', tabindex: '0' } : null, columns.map((c) => h('td', { class: `${c.align === 'num' ? 'num ' : ''}${c.hideSm ? 'hide-sm' : ''} ${c.class || ''}`.trim() }, c.render(row))));
-    if (href) {
-      const go = () => { location.hash = href; };
-      tr.addEventListener('click', (e) => { if (!e.target.closest('a,button,input,select')) go(); });
-      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target === tr) go(); });
-    }
+    // One tab stop per row: the link inside the row is the keyboard target; clicking anywhere else on the row is a pointer convenience.
+    const tr = h('tr', { role: 'row', class: href ? 'clickable' : '' }, columns.map((c, ci) => h('td', {
+      role: 'cell', 'data-label': c.label || undefined, class: `${c.align === 'num' ? 'num ' : ''}${hidden(c)} ${ci === 0 ? 'cell-title ' : ''}${c.class || ''}`.trim(),
+    }, c.render(row, i))));
+    if (href) tr.addEventListener('click', (e) => { if (!e.target.closest('a,button,input,select,summary')) location.hash = href; });
     return tr;
   });
-  return h('div', { class: 'table-wrap' }, h('table', { class: 'data-table' }, h('caption', null, caption), h('thead', null, head), h('tbody', null, body)));
+  return h('div', { class: 'table-wrap' }, h('table', { class: `data-table${stack ? ' stack-sm' : ''}`, role: 'table' },
+    h('caption', null, caption), h('thead', { role: 'rowgroup' }, head), h('tbody', { role: 'rowgroup' }, body)));
 }
 
 export function tableFoot(pageInfo, onPage, noun = 'rows') {

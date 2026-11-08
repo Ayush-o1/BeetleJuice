@@ -130,7 +130,10 @@ test('browser journey: analyst -> supervisor -> auditor', async (t) => {
   const u = await open('auditor');
   await signIn(u.page, 'auditor');
   await u.page.click('a.nav-link:has-text("Audit log")');
-  await u.page.waitForSelector('td .tag:has-text("proposal.approved")');
+  // the log reads as sentences (with the machine code kept underneath), not as JSON key names
+  await u.page.waitForSelector('td .evt:has-text("Approved “")');
+  assert.ok(await u.page.locator('td .cell-sub:has-text("proposal.approved")').count() >= 1, 'action code is still shown');
+  assert.equal(await u.page.locator('td.wrap:has-text("proposalId")').count(), 0, 'raw JSON key names are not shown as the description');
   await u.page.click('a.nav-link:has-text("Sources")');
   assert.equal(await u.page.locator('button:has-text("Upload file")').count(), 0, 'auditor cannot upload');
   await u.page.evaluate(() => { location.hash = '#/breaks/1'; });
@@ -138,7 +141,7 @@ test('browser journey: analyst -> supervisor -> auditor', async (t) => {
   assert.equal(await u.page.locator('button:has-text("Submit for review")').count(), 0);
   await u.page.click('a.nav-link:has-text("Settings")');
   assert.equal(await u.page.locator('button:has-text("Save as new version")').count(), 0);
-  assert.equal(await u.page.locator('input').first().isDisabled(), true);
+  assert.equal(await u.page.locator('main input').first().isDisabled(), true);
   const status = await u.page.evaluate(async () => (await fetch('/api/settings', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: '{}' })).status);
   assert.equal(status, 403);
   await u.ctx.close();

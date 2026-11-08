@@ -6,6 +6,7 @@ import { formatDateTime, formatDate, formatInt, formatPaise, shortHash, plural }
 import { icon } from '../icons.js';
 import { can } from '../shell.js';
 import { debounce } from '../dom.js';
+import { LEDGER_TEMPLATE, SETTLEMENT_TEMPLATE, toCsvText } from '../templates.js';
 
 const FORMATS = {
   ledger: {
@@ -65,6 +66,16 @@ function uploadPanel(onDone) {
   const zone = h('div', { class: 'dropzone' }, picked);
   const help = h('div');
   const submit = button({ label: 'Upload and validate', icon: 'upload', variant: 'primary', type: 'submit', disabled: true });
+  const bar = h('progress', { class: 'upload-bar', max: '100', value: '0', 'aria-label': 'Upload progress' });
+  const progress = h('div', { class: 'upload-progress', hidden: true, role: 'status' }, bar, h('span', { class: 'muted' }));
+  const showProgress = (loaded, total) => {
+    progress.hidden = false;
+    const done = loaded >= total;
+    bar.value = Math.round((loaded / total) * 100);
+    bar.toggleAttribute('value', !done);          // indeterminate once all bytes are sent: the server is validating, and no percentage exists for that
+    progress.lastChild.textContent = done ? 'File received. Validating every row…' : `Uploading… ${Math.round((loaded / total) * 100)}% (${(loaded / 1024).toFixed(0)} of ${(total / 1024).toFixed(0)} KB)`;
+    if (!done) bar.value = Math.round((loaded / total) * 100);
+  };
 
   const chooseBtn = h('button', { class: 'btn btn-sm', type: 'button', onclick: () => picker.click() }, 'choose a file');
   const setFile = (f) => {
@@ -93,23 +104,35 @@ function uploadPanel(onDone) {
   const form = h('form', null, body);
   body.append(
     h('fieldset', { style: undefined }, h('legend', { class: 'sr-only' }, 'File type'), h('div', { class: 'radio-row' }, radio('ledger', 'Internal ledger', 'Payments recorded by the merchant'), radio('settlement', 'Processor settlement', 'Transactions and batch payouts from the processor'))),
-    zone, picker, help, h('div', { class: 'row' }, submit), result);
+    zone, picker, help, h('div', { class: 'row' }, submit, templateLink()), progress, result);
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!file) return;
     clear(result);
+    if (!/\.csv$/i.test(file.name)) { result.append(alertBox('bad', 'Choose a .csv file', 'Only CSV exports are accepted. Export the data as CSV and try again.')); return; }
+    if (file.size === 0) { result.append(alertBox('bad', 'This file is empty', 'It has no header and no rows.')); return; }
     await withBusy(submit, async () => {
       try {
-        const res = await api.upload(kind, file);
+        showProgress(0, 1);
+        const res = await api.upload(kind, file, showProgress);
         clear(result).append(renderUploadReport(res.data));
         toast(`${file.name} ingested`);
         setFile(null); picker.value = '';
         onDone();
       } catch (err) {
         clear(result).append(renderUploadError(err));
-      }
+      } finally { progress.hidden = true; }
     });
   });
+  function templateLink() {
+    return button({ label: 'Download a template', icon: 'download', small: true, variant: 'ghost', title: 'A small valid example file for the selected type', onClick: () => {
+      const t = kind === 'ledger' ? LEDGER_TEMPLATE : SETTLEMENT_TEMPLATE;
+      const url = URL.createObjectURL(new Blob([toCsvText(t)], { type: 'text/csv' }));
+      const a = h('a', { href: url, download: t.filename });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } });
+  }
   return panel('Upload a source file', form, { flush: false });
 }
 
