@@ -1,15 +1,15 @@
 /* login */
 .login-wrap { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px); }
-.login-aside { background: var(--accent); color: #fff; padding: 56px 56px; display: flex; flex-direction: column; justify-content: space-between; }
+.login-aside { background: var(--brand); color: #fff; padding: 56px 56px; display: flex; flex-direction: column; justify-content: space-between; }
 .login-aside .brand, .login-aside .brand:hover { color: #fff; }
 .login-aside .brand-name { font-size: 22px; }
 .login-aside .mark-bg { fill: #fff; }
-.login-aside .mark-bars { stroke: #2C3E7B; }
+.login-aside .mark-bars { stroke: var(--brand); }
 .login-aside h1 { font-size: 30px; font-weight: 500; max-width: 18ch; line-height: 1.2; letter-spacing: -0.02em; }
-.login-aside p { color: #C9D3F2; max-width: 46ch; margin-top: 14px; }
+.login-aside p { color: #D3DBF6; max-width: 46ch; margin-top: 14px; }
 .login-aside ul { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 10px; color: #DCE3F8; font-size: var(--fs-md); }
-.login-aside li { display: flex; gap: 10px; align-items: flex-start; } .login-aside li .icon { margin-top: 3px; color: #7BD3A4; }
-.login-aside .fine { font-size: var(--fs-xs); color: #AAB7E6; }
+.login-aside li { display: flex; gap: 10px; align-items: flex-start; } .login-aside li .icon { margin-top: 3px; color: var(--mark-tick); }
+.login-aside .fine { font-size: var(--fs-xs); color: #BCC7EE; }
 .login-main { display: flex; align-items: center; justify-content: center; padding: 32px; background: var(--canvas); }
 .login-card { width: 100%; max-width: 340px; }
 .login-card h2 { font-size: var(--fs-xl); margin-bottom: 4px; }
@@ -29,9 +29,9 @@
 .decision-actions .btn { flex: 1; }
 
 /* explanation block */
-.finding { padding: 14px 16px; border-left: 3px solid var(--warn); background: var(--warn-bg); border-radius: 0 var(--radius) var(--radius) 0; color: #4E3000; }
-.finding.ok { border-left-color: var(--ok); background: var(--ok-bg); color: #0F4029; }
-.finding.info { border-left-color: var(--accent); background: var(--info-bg); color: #1F2C58; }
+.finding { padding: 14px 16px; border-left: 3px solid var(--warn); background: var(--warn-bg); border-radius: 0 var(--radius) var(--radius) 0; color: var(--warn-ink); }
+.finding.ok { border-left-color: var(--ok); background: var(--ok-bg); color: var(--ok-ink); }
+.finding.info { border-left-color: var(--accent); background: var(--info-bg); color: var(--info-ink); }
 .finding .rule { font-size: var(--fs-xs); margin-top: 6px; opacity: 0.85; }
 
 .json-toggle { background: none; border: 0; color: var(--accent); padding: 0; font-size: var(--fs-xs); }

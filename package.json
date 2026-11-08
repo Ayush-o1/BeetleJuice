@@ -1,7 +1,7 @@
 {
   "name": "beetlejuice",
-  "version": "1.0.0",
-  "description": "BeetleJuice \u2014 settlement reconciliation and break management for payment operations (synthetic-data simulation).",
+  "version": "1.1.0",
+  "description": "BeetleJuice — settlement reconciliation and break management for payment operations (synthetic-data simulation).",
   "private": true,
   "license": "MIT",
   "type": "commonjs",
@@ -17,8 +17,10 @@
     "db:create": "node scripts/create-db.js",
     "user:create": "node scripts/create-user.js",
     "demo:generate": "node scripts/generate-demo-data.js",
+    "demo:scenarios": "node scripts/generate-scenarios.js",
     "demo:reset": "node scripts/demo-reset.js",
     "bench": "node scripts/benchmark.js",
+    "screenshots": "node scripts/capture-screenshots.js",
     "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
     "test:unit": "node --test \"test/unit/**/*.test.js\"",
     "test:integration": "node --test --test-concurrency=1 \"test/integration/**/*.test.js\"",
@@ -34,6 +36,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "axe-core": "^4.14.0",
     "playwright-core": "^1.65.0"
   },
   "author": "Ayush-o1",

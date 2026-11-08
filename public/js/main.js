@@ -9,9 +9,9 @@ import './views/breaks.js';
 import './views/review.js';
 import './views/audit.js';
 import './views/settings.js';
+import './views/trace.js';
 
 const root = document.getElementById('app');
-try { const d = localStorage.getItem('bj.density'); if (d) document.documentElement.dataset.density = d; } catch { /* storage may be blocked */ }
 
 let loginMessage = null;
 let refreshNav = () => {};

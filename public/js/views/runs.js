@@ -39,7 +39,7 @@ route('/runs', async ({ container, query }) => {
       ],
       rows: res.data, rowHref: (r) => `/runs/${r.id}`,
       emptyNode: emptyState({ title: 'No runs yet', body: can('runs:create') ? 'Choose a ledger file and a settlement file to start the first run.' : 'No reconciliation runs have been started.' }),
-    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p }); list.reload(); }, 'runs')),
+    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p > 1 ? p : "" }); list.reload(); }, 'runs')),
   });
   // Poll only while something is queued or running.
   const timer = setInterval(() => { if (anyActive) list.reload(); }, 2500);
@@ -154,11 +154,14 @@ function stepper(run) {
   const idx = failed ? 1 : order.indexOf(run.status);
   const step = (i, label, detail) => {
     const cls = failed && i === 2 ? 'failed' : i < idx || run.status === 'completed' ? 'done' : i === idx ? 'active' : '';
-    return h('div', { class: `step ${cls}` }, h('span', { class: 'dot' }, cls === 'done' ? icon('check') : cls === 'failed' ? icon('x') : null), h('span', null, label, detail && h('span', { class: 'faint' }, ` · ${detail}`)));
+    const state = cls === 'done' ? 'done' : cls === 'failed' ? 'failed' : cls === 'active' ? 'current' : 'not reached';
+    return h('li', { class: `step ${cls}`, 'aria-current': cls === 'active' || cls === 'failed' ? 'step' : undefined },
+      h('span', { class: 'dot', 'aria-hidden': 'true' }, cls === 'done' ? icon('check') : cls === 'failed' ? icon('x') : null),
+      h('span', null, label, detail && h('span', { class: 'faint' }, ` · ${detail}`), h('span', { class: 'sr-only' }, ` (${state})`)));
   };
-  return h('div', { class: 'panel' }, h('div', { class: 'panel-body row' }, h('div', { class: 'stepper', role: 'list', 'aria-label': 'Run progress' },
-    step(0, 'Queued', formatDateTime(run.createdAt)), h('span', { class: 'step-line' }),
-    step(1, 'Running', run.startedAt ? formatDateTime(run.startedAt) : ''), h('span', { class: 'step-line' }),
+  return h('div', { class: 'panel' }, h('div', { class: 'panel-body row' }, h('ol', { class: 'stepper', 'aria-label': 'Run progress' },
+    step(0, 'Queued', formatDateTime(run.createdAt)),
+    step(1, 'Running', run.startedAt ? formatDateTime(run.startedAt) : ''),
     step(2, failed ? 'Failed' : 'Completed', run.finishedAt ? formatDateTime(run.finishedAt) : ''))));
 }
 

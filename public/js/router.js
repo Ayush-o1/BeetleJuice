@@ -3,6 +3,7 @@ const routes = [];
 let current = { cleanup: null };
 let silent = false;
 let listener = null;
+let firstRender = true;
 
 export function route(pattern, handler, options = {}) {
   const keys = [];
@@ -53,7 +54,10 @@ export function startRouter({ container, onRoute, resolveUser, notFound, forbidd
     onRoute({ path, title: match.r.options.title || '', nav: match.r.options.nav });
     document.title = `${match.r.options.title ? `${match.r.options.title} · ` : ''}BeetleJuice`;
     current.cleanup = await match.r.handler({ container, params, query, user });
-    $focusMain();
+    // After a navigation focus moves to <main> so keyboard and screen-reader users start at the new content. On the
+    // very first render it stays put, so the skip link remains the first tab stop of a freshly loaded page.
+    if (!firstRender) $focusMain();
+    firstRender = false;
   }
   const $focusMain = () => document.getElementById('main')?.focus({ preventScroll: true });
   if (listener) window.removeEventListener('hashchange', listener);

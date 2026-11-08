@@ -2,6 +2,7 @@ import { h, clear } from './dom.js';
 import { icon, brandMark } from './icons.js';
 import { api, setCsrfToken } from './api.js';
 import { button, badge, withBusy, toast, field, alertBox } from './ui.js';
+import { navigate } from './router.js';
 import { ROLES } from './format.js';
 
 export const session = { user: null, permissions: [] };
@@ -40,24 +41,15 @@ export function renderShell(root, { onSignOut }) {
 
   const shell = h('div', { class: 'shell' });
   const closeNav = () => shell.classList.remove('nav-open');
-  const density = () => document.documentElement.dataset.density === 'compact';
-  const densityBtn = button({
-    label: density() ? 'Rows: compact' : 'Rows: comfortable', variant: 'ghost', small: true, title: 'Switch table row density', hideSm: true,
-    onClick: () => {
-      const next = density() ? 'comfortable' : 'compact';
-      document.documentElement.dataset.density = next;
-      try { localStorage.setItem('bj.density', next); } catch { /* storage may be blocked */ }
-      densityBtn.querySelector('span').textContent = next === 'compact' ? 'Rows: compact' : 'Rows: comfortable';
-    },
-  });
-  densityBtn.classList.add('hide-sm');
-  const signOut = button({ label: 'Sign out', icon: 'logout', variant: 'ghost', small: true, onClick: (e) => withBusy(e.currentTarget, onSignOut) });
+  const signOut = button({ label: 'Sign out', icon: 'logout', variant: 'ghost', small: true, ariaLabel: 'Sign out', onClick: (e) => withBusy(e.currentTarget, onSignOut) });
+  signOut.querySelector('span').classList.add('hide-xs');
 
   const topbar = h('header', { class: 'topbar' },
     button({ icon: 'menu', variant: 'ghost', ariaLabel: 'Open navigation', onClick: () => shell.classList.add('nav-open') }),
     badge('neutral', 'Synthetic data', 'badge-plain'),
+    can('breaks:read') && referenceSearch(),
     h('span', { class: 'spacer' }),
-    densityBtn,
+    displayMenu(),
     h('div', { class: 'user-chip' }, h('span', { class: 'name' }, session.user.displayName), badge('info', ROLES[session.user.role], 'badge-plain hide-sm')),
     signOut);
   topbar.firstChild.classList.add('menu-btn');
@@ -91,6 +83,42 @@ export function renderShell(root, { onSignOut }) {
   };
 }
 
+/** Topbar "Find reference" box. "/" focuses it from anywhere except while typing. */
+function referenceSearch() {
+  const input = h('input', { class: 'input', type: 'search', name: 'reference', placeholder: 'Find reference…  ( / )', 'aria-label': 'Find a reference', autocomplete: 'off', spellcheck: 'false', maxlength: '64' });
+  const form = h('form', { class: 'topsearch', role: 'search' }, icon('search'), input);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = input.value.trim();
+    if (v.length < 2) return;
+    navigate('/trace', { reference: v });
+    input.blur();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || e.target.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]')) return;
+    e.preventDefault();
+    input.focus();
+    input.select();
+  });
+  return form;
+}
+
+/** "Display" menu: theme and row density. Uses the native popover API (light dismiss, Esc, top layer). */
+function displayMenu() {
+  const group = (name, legend, options, current, onPick) => h('fieldset', { class: 'menu-group' }, h('legend', null, legend),
+    options.map(([value, label]) => h('label', { class: 'menu-opt' },
+      h('input', { type: 'radio', name, value, checked: value === current, onchange: () => onPick(value) }), h('span', null, label))));
+  const density = () => document.documentElement.dataset.density === 'compact' ? 'compact' : 'comfortable';
+  const pop = h('div', { id: 'display-menu', class: 'menu-pop', popover: 'auto', role: 'group', 'aria-label': 'Display settings' },
+    group('theme', 'Theme', [['system', 'Match system'], ['light', 'Light'], ['dark', 'Dark']], window.bjTheme.get(), (v) => window.bjTheme.set(v)),
+    group('density', 'Table rows', [['comfortable', 'Comfortable'], ['compact', 'Compact']], density(), (v) => {
+      document.documentElement.dataset.density = v;
+      try { localStorage.setItem('bj.density', v); } catch { /* storage may be blocked */ }
+    }));
+  const trigger = h('button', { class: 'btn btn-ghost btn-sm', type: 'button', popovertarget: 'display-menu', 'aria-label': 'Display settings', title: 'Display settings' }, icon('settings'), h('span', { class: 'hide-sm' }, 'Display'));
+  return h('div', { class: 'menu-wrap' }, trigger, pop);
+}
+
 export function renderLogin(root, { message, onSuccess }) {
   clear(root);
   const error = h('div', { 'aria-live': 'polite' });
@@ -116,7 +144,7 @@ export function renderLogin(root, { message, onSuccess }) {
   });
 
   const points = ['Upload ledger and processor settlement files', 'Match deterministically, with every outcome explained', 'Resolve breaks under maker-checker control', 'Keep an append-only audit history'];
-  root.append(h('div', { class: 'login-wrap' },
+  root.append(h('main', { class: 'login-wrap', id: 'main', tabindex: '-1' },
     h('div', { class: 'login-aside' },
       h('div', { class: 'brand' }, brandMark(), h('span', { class: 'brand-name' }, 'BeetleJuice')),
       h('div', null, h('h1', null, 'Settlement reconciliation, with every difference explained.'),

@@ -14,6 +14,7 @@ const { breakRoutes } = require('./modules/breaks/break.routes');
 const { resolutionRoutes } = require('./modules/resolutions/resolution.routes');
 const { auditRoutes } = require('./modules/audit/audit.routes');
 const { overviewRoutes } = require('./modules/overview/overview.routes');
+const { traceRoutes } = require('./modules/trace/trace.routes');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
@@ -64,6 +65,7 @@ function createApp(ctx) {
   app.use('/api/breaks', breakRoutes(ctx));
   app.use('/api/proposals', resolutionRoutes(ctx));
   app.use('/api/audit', auditRoutes(ctx));
+  app.use('/api/trace', traceRoutes(ctx));
   app.use('/api', notFoundHandler);
 
   app.use(express.static(PUBLIC_DIR, {

@@ -27,10 +27,10 @@ route('/review', async ({ container, query }) => {
         { label: 'Amount at issue', align: 'num', render: (p) => money(p.impactPaise) },
         { label: 'Proposed by', hideSm: true, render: (p) => h('div', null, p.proposedByName, h('span', { class: 'cell-sub' }, formatDateTime(p.createdAt))) },
         { label: 'Status', render: (p) => badge({ pending: 'info', approved: 'ok', rejected: 'bad' }[p.status], p.status === 'pending' ? 'Awaiting review' : p.status === 'approved' ? 'Approved' : 'Rejected') },
-        { label: '', render: (p) => button({ label: p.status === 'pending' && can('proposals:decide') ? 'Review' : 'View', small: true, href: `#/breaks/${p.breakId}` }) },
+        { label: '', srLabel: 'Open', render: (p) => button({ label: p.status === 'pending' && can('proposals:decide') ? 'Review' : 'View', small: true, href: `#/breaks/${p.breakId}` }) },
       ],
       rows: res.data, rowHref: (p) => `/breaks/${p.breakId}`,
       emptyNode: emptyState({ title: state.status === 'pending' ? 'Nothing is waiting for review' : 'No proposals here', body: state.status === 'pending' ? 'New proposals from analysts will appear in this queue.' : undefined }),
-    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p }); list.reload(); }, 'proposals')),
+    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p > 1 ? p : "" }); list.reload(); }, 'proposals')),
   });
 }, { title: 'Review queue', permission: 'proposals:read', nav: 'review' });

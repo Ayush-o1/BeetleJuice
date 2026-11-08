@@ -1,0 +1,47 @@
+{
+  "scenario": "late-settlements",
+  "size": "small",
+  "seed": 20261108,
+  "asOfDate": "2026-11-08",
+  "settings": {
+    "settlementWindowDays": 2,
+    "feeRatePercent": "2.0000",
+    "feeTolerancePaise": 1,
+    "amountTolerancePaise": 0
+  },
+  "ledgerRows": {
+    "total": 18,
+    "accepted": 18,
+    "rejected": 0
+  },
+  "settlementRows": {
+    "total": 14,
+    "accepted": 14,
+    "rejected": 0
+  },
+  "rejectedCodes": {
+    "ledger": [],
+    "settlement": []
+  },
+  "transactions": {
+    "matched": 10,
+    "pending": 3,
+    "breaks": 5
+  },
+  "breaksByType": {
+    "AMOUNT_MISMATCH": 0,
+    "DUPLICATE_SETTLEMENT": 0,
+    "MISSING_IN_LEDGER": 0,
+    "MISSING_IN_SETTLEMENT": 5,
+    "BATCH_PAYOUT_MISMATCH": 0,
+    "FEE_VARIANCE": 0,
+    "AMBIGUOUS_REFERENCE": 0
+  },
+  "batches": {
+    "total": 4,
+    "matched": 4,
+    "broken": 0,
+    "brokenIds": []
+  },
+  "totalBreaks": 5
+}

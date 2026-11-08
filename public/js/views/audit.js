@@ -2,9 +2,10 @@ import { h, clear, debounce } from '../dom.js';
 import { api, exportUrl } from '../api.js';
 import { route, setQuery } from '../router.js';
 import { asyncRegion, pageHead, button, dataTable, tableFoot, emptyState, field, select, roleBadge } from '../ui.js';
-import { formatDateTime } from '../format.js';
+import { formatDateTime, ROLES } from '../format.js';
+import { describeEvent, actorLabel } from '../audit-text.js';
 
-const KEYS = ['action', 'entityType', 'actor', 'runId', 'breakId', 'from', 'to'];
+const KEYS = ['action', 'entityType', 'actor', 'runId', 'breakId', 'from', 'to', 'hide'];
 const FAMILIES = [['', 'All actions'], ['auth.', 'Authentication'], ['source.', 'Sources'], ['run.', 'Runs'], ['break.', 'Breaks'], ['proposal.', 'Proposals'], ['settings.', 'Settings']];
 
 route('/audit', async ({ container, query }) => {
@@ -32,7 +33,8 @@ route('/audit', async ({ container, query }) => {
         field('Action', actionSelect, { className: 'wide' }),
         txt('actor', 'Actor', { placeholder: 'username' }), txt('runId', 'Run', { inputmode: 'numeric', placeholder: '#' }), txt('breakId', 'Break', { inputmode: 'numeric', placeholder: '#' }),
         field('From (IST)', h('input', { class: 'input', type: 'date', value: f.from || '', 'aria-label': 'From date', onchange: (e) => apply({ from: e.target.value }) })),
-        field('To (IST)', h('input', { class: 'input', type: 'date', value: f.to || '', 'aria-label': 'To date', onchange: (e) => apply({ to: e.target.value }) }))),
+        field('To (IST)', h('input', { class: 'input', type: 'date', value: f.to || '', 'aria-label': 'To date', onchange: (e) => apply({ to: e.target.value }) })),
+        h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: f.hide === 'auth', onchange: (e) => apply({ hide: e.target.checked ? 'auth' : '' }) }), 'Hide sign-in activity')),
       region));
 
   const list = asyncRegion(region, {
@@ -41,14 +43,14 @@ route('/audit', async ({ container, query }) => {
       caption: 'Audit events',
       columns: [
         { label: 'When', render: (e) => h('span', { class: 'nowrap' }, formatDateTime(e.occurredAt)) },
-        { label: 'Actor', render: (e) => (e.actor ? h('div', null, e.actor, h('span', { class: 'cell-sub' }, e.actorRole)) : h('span', { class: 'faint' }, 'System')) },
-        { label: 'Action', render: (e) => h('span', { class: 'tag' }, e.action) },
-        { label: 'Subject', render: (e) => subject(e) },
-        { label: 'Details', render: (e) => detail(e) },
+        { label: 'Who', render: (e) => (e.actor ? h('div', null, actorLabel(e), h('span', { class: 'cell-sub' }, `@${e.actor} · ${ROLES[e.actorRole] || e.actorRole}`)) : h('span', { class: 'muted' }, 'System')) },
+        { label: 'What happened', class: 'wrap', render: (e) => { const d = describeEvent(e); return h('div', null, h('span', { class: `evt evt-${d.tone}` }, d.text), h('span', { class: 'cell-sub ref' }, e.action)); } },
+        { label: 'Related', render: (e) => subject(e) },
+        { label: 'Technical', render: (e) => detail(e) },
       ],
       rows: res.data,
       emptyNode: emptyState({ title: 'No events match', body: 'Adjust the filters to widen the search.' }),
-    }), res.data.length > 0 && tableFoot(res.page, (p) => { f.page = p; setQuery({ page: p }); list.reload(); }, 'events')),
+    }), res.data.length > 0 && tableFoot(res.page, (p) => { f.page = p; setQuery({ page: p > 1 ? p : "" }); list.reload(); }, 'events')),
   });
 }, { title: 'Audit log', permission: 'audit:read', nav: 'audit' });
 
@@ -56,13 +58,13 @@ function subject(e) {
   const links = [];
   if (e.breakId) links.push(h('a', { href: `#/breaks/${e.breakId}` }, `Break #${e.breakId}`));
   if (e.runId) links.push(h('a', { href: `#/runs/${e.runId}` }, `Run #${e.runId}`));
-  if (!links.length) return h('span', { class: 'muted' }, `${e.entityType}${e.entityId ? ` #${e.entityId}` : ''}`);
+  if (!links.length) return h('span', { class: 'muted' }, e.entityType === 'source_file' && e.entityId ? h('a', { href: `#/sources/${e.entityId}` }, `Source #${e.entityId}`) : `${e.entityType.replace('_', ' ')}${e.entityId ? ` #${e.entityId}` : ''}`);
   return h('span', { class: 'row', style: undefined }, links.flatMap((l, i) => (i ? [' · ', l] : [l])));
 }
 
 function detail(e) {
   const keys = Object.keys(e.context || {});
-  if (!keys.length) return h('span', { class: 'faint' }, '—');
-  return h('details', null, h('summary', { class: 'muted' }, keys.slice(0, 3).join(', ') + (keys.length > 3 ? '…' : '')),
+  if (!keys.length && !e.requestId) return h('span', { class: 'faint' }, '—');
+  return h('details', null, h('summary', { class: 'muted' }, 'JSON'),
     h('pre', { class: 'json' }, JSON.stringify(e.context, null, 2) + (e.requestId ? `\nrequest ${e.requestId}` : '') + (e.ip ? `\nip ${e.ip}` : '')));
 }

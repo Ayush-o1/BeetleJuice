@@ -84,6 +84,12 @@ Resolutions record a decision only; the simulation does not post anything to a l
 |---|---|---|
 | `GET /settings`, `GET /settings/history` | all | current / versions |
 | `PUT /settings` | S | `{amountTolerancePaise, feeRatePercent, feeTolerancePaise, settlementWindowDays, expectedVersion, note?}` → new version; 409 `SETTINGS_STALE` |
-| `GET /audit?action=&entityType=&actor=&runId=&breakId=&from=&to=` | S, U | `action=auth.` matches the family; dates are IST days |
+| `GET /audit?action=&entityType=&actor=&runId=&breakId=&from=&to=&hide=auth` | S, U | `action=auth.` matches the family; dates are IST days; `hide=auth` leaves out sign-in/out events (opt-in; anything else is a 400). Rows include `actorName` (display name) next to `actor` (username) |
 | `GET /audit/actions`, `GET /audit/export.csv` | S, U | |
-| `GET /overview` | all | figures computed from persisted data |
+| `GET /overview` | all | figures computed from persisted data: break counts and `byType`, `ageing` (four buckets of unresolved breaks by IST days since the reference date: `d0_1`, `d2_3`, `d4_7`, `d8_plus`, each with count and impact), `recentActivity` (latest uploads, completed/failed runs and decisions, built from the business tables, so it needs no audit permission), `recentFailures` (runs that failed in the last 7 days) |
+
+## Find a reference
+
+| Method & path | Roles | Notes |
+|---|---|---|
+| `GET /trace?reference=` | all | Everything known about one reference, matched or not: `ledger[]` and `settlement[]` records from every uploaded file (up to 50 each, `truncated` says so) and `results[]`, how each *completed* run classified them (outcome, rule, explanation, break id and status). Case-insensitive exact match; 2–64 characters. Read-only |
