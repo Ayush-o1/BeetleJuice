@@ -16,10 +16,11 @@ const SAMPLE_ERRORS = 50;
 function cleanFilename(raw) {
   let name = '';
   try { name = decodeURIComponent(String(raw || '')); } catch { name = String(raw || ''); }
-  name = name.split(/[\\/]/).pop().replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 200);
+  name = name.split(/[\\/]/).pop().replace(/[\u0000-\u001f\u007f]/g, '').trim();
   if (!name) throw badRequest('Send the original file name in the X-Filename header');
   if (!/\.csv$/i.test(name)) throw unprocessable('UNSUPPORTED_FILE_TYPE', 'Only .csv files are accepted');
-  return name;
+  // Shorten over-long names from the middle of the stem so the extension survives.
+  return name.length > 200 ? `${name.slice(0, 196)}.csv` : name;
 }
 
 function parseByKind(kind, buffer, config) {

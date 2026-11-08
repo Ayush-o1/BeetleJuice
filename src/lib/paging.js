@@ -18,7 +18,8 @@ function pageResponse(rows, total, page, pageSize) {
  */
 function orderBy(sortParam, allowed, fallback, tiebreak) {
   const [key, dirRaw] = String(sortParam || '').split(':');
-  const expr = allowed[key];
+  // Own-property check: plain `allowed[key]` would resolve '__proto__' or 'constructor' to inherited objects.
+  const expr = Object.hasOwn(allowed, key) ? allowed[key] : undefined;
   if (!expr) return `${fallback}, ${tiebreak}`;
   const dir = dirRaw === 'asc' ? 'ASC' : 'DESC';
   return `${expr} ${dir}, ${tiebreak}`;
