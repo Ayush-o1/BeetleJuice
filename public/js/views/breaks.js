@@ -83,7 +83,7 @@ route('/breaks', async ({ container, query }) => {
       ],
       rows: res.data, rowHref: (b) => `/breaks/${b.id}`,
       emptyNode: emptyState({ title: 'No breaks match these filters', body: FILTER_KEYS.some((k) => f[k] && !(k === 'status' && f.status === 'unresolved')) ? 'Remove a filter to widen the search.' : 'There are no unresolved breaks. Completed runs that find differences will list them here.' }),
-    }), res.data.length > 0 && tableFoot(res.page, (p) => { f.page = p; setQuery({ page: p }); list.reload(); }, 'breaks')); },
+    }), res.data.length > 0 && tableFoot(res.page, (p) => { f.page = p; setQuery({ page: p > 1 ? p : "" }); list.reload(); }, 'breaks')); },
   });
   drawChips();
 

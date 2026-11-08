@@ -37,3 +37,5 @@ table { border-collapse: collapse; width: 100%; }
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .mark-bg { fill: var(--brand); }
 .sidebar .mark-bg { fill: var(--accent-solid); }
+/* keyboard focus is scrolled clear of the sticky top bar (WCAG 2.4.11 Focus Not Obscured) */
+html { scroll-padding-top: 72px; }

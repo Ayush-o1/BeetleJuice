@@ -53,4 +53,20 @@ Severity: **High** = wrong or blocks a task, **Med** = costs the user time or tr
 * **Downloadable per-break investigation report.** The CSV export plus the audit export already carry this; a PDF
   generator would be a new dependency for a presentational gain.
 * **Animations.** The product already has 120–180 ms transitions on view entry, dialogs and toasts, all disabled under
-  `prefers-reduced-motion`. No new motion was added except the theme cross-fade, which is also disabled under reduced motion.
+  `prefers-reduced-motion`. No new motion was added: theme switching is instant, and the only new transition is the 120 ms rotation of the "What to check" chevron.
+
+## Found while verifying the fixes (not in the first audit)
+
+| # | Sev | Finding | Status |
+|---|---|---|---|
+| H1 | Med | Links inside running text (activity feed, alerts, hints) were distinguished by colour only (WCAG 1.4.1) | Fixed |
+| H2 | Med | The login screen had no `<main>` landmark and its skip link had no target | Fixed |
+| H3 | Low | The router moved focus to `<main>` on first load, so the skip link was not the first tab stop | Fixed: focus moves only on later navigations |
+| H4 | Low | Pagination wrote `page=1` into the URL when returning to the first page | Fixed |
+| H5 | Med | Filter-chip remove buttons (20 px), sort-header buttons (17 px) and `<summary>` (20 px) were below the 24 px WCAG 2.2 target size | Fixed, now tested |
+| H6 | Low | Sticky top bar could in principle cover keyboard focus when scrolling | `scroll-padding-top` added; tested by tabbing 40 stops down a long list |
+
+## Not verified
+
+No screen reader (VoiceOver, NVDA, JAWS) was run; accessibility is evidenced by axe-core, keyboard tests and structure only. Safari and Firefox were not tested (Chrome only); the Display menu uses the native `popover` attribute, available in current releases of all three engines.
+Contrast was verified numerically for text pairs; large decorative differences (for example table row hover) were judged by eye.

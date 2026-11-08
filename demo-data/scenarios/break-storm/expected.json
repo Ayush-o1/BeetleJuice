@@ -1,0 +1,50 @@
+{
+  "scenario": "break-storm",
+  "size": "small",
+  "seed": 20261108,
+  "asOfDate": "2026-11-08",
+  "settings": {
+    "settlementWindowDays": 2,
+    "feeRatePercent": "2.0000",
+    "feeTolerancePaise": 1,
+    "amountTolerancePaise": 0
+  },
+  "ledgerRows": {
+    "total": 13,
+    "accepted": 13,
+    "rejected": 0
+  },
+  "settlementRows": {
+    "total": 21,
+    "accepted": 21,
+    "rejected": 0
+  },
+  "rejectedCodes": {
+    "ledger": [],
+    "settlement": []
+  },
+  "transactions": {
+    "matched": 7,
+    "pending": 1,
+    "breaks": 8
+  },
+  "breaksByType": {
+    "AMOUNT_MISMATCH": 1,
+    "DUPLICATE_SETTLEMENT": 1,
+    "MISSING_IN_LEDGER": 1,
+    "MISSING_IN_SETTLEMENT": 1,
+    "BATCH_PAYOUT_MISMATCH": 2,
+    "FEE_VARIANCE": 1,
+    "AMBIGUOUS_REFERENCE": 3
+  },
+  "batches": {
+    "total": 9,
+    "matched": 7,
+    "broken": 2,
+    "brokenIds": [
+      "NP-20261104-A",
+      "NP-20261105-B"
+    ]
+  },
+  "totalBreaks": 10
+}

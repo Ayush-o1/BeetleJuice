@@ -16,7 +16,7 @@ the automated test that fails if the control regresses; where a control is desig
 | SQL injection | Bind parameters everywhere; the only interpolated fragments are whitelisted `ORDER BY` expressions and integer `LIMIT/OFFSET` produced by zod | code review + sort whitelist test |
 | File upload | Raw body size limit; `.csv` + `text/csv` only; strict UTF-8, NUL bytes rejected; row limit; header contract; file name reduced to a display string (never used as a path); bytes stored at `<sha256>.csv`, mode 0600, outside `public/` | `sources.test.js`, `security.test.js` |
 | CSV injection | Identifiers must start alphanumeric; free text is stored as data and rendered with `textContent`; exports prefix cells starting with `= + - @ TAB CR` (and full-width forms) with `'` while leaving generated numeric cells untouched | `workflow.test.js`, `sources.test.js` |
-| XSS | No `innerHTML` with data; CSP `default-src 'self'`, no inline script/style, `frame-ancestors 'none'` | CSP header test; browser E2E has zero console errors |
+| XSS | No `innerHTML` with data; CSP `default-src 'self'`, no inline script/style, `frame-ancestors 'none'`. The no-flash theme script is an external same-origin file (`/js/theme-init.js`) so no `unsafe-inline` or hash is needed | CSP header test; browser E2E and axe runs have zero console errors |
 | Info leakage | Central handler: generic 500s, request id for correlation, no stack traces, SQL or paths; `X-Powered-By` removed; API responses `Cache-Control: no-store` | `auth.test.js` |
 | Audit | Append-only triggers (UPDATE/DELETE/TRUNCATE rejected); business change and audit row share a transaction; failed logins, rejected uploads, blocked self-approvals are recorded; passwords/tokens are never logged (pino redaction as a backstop) | `workflow.test.js`, `auth.test.js` |
 | Resource limits | 100 KB JSON bodies, `MAX_UPLOAD_BYTES`, `MAX_UPLOAD_ROWS`, `pageSize ≤ 100`, export ≤ 10,000 rows | `sources.test.js` |
@@ -46,3 +46,12 @@ the automated test that fails if the control regresses; where a control is desig
 * TLS is expected to terminate at a reverse proxy; set `TRUST_PROXY=true` and serve over HTTPS in production
   (`Secure` cookies and HSTS/upgrade-insecure-requests are enabled automatically when `NODE_ENV=production`).
 * Demo accounts share a public password and exist only through `demo:reset`, which refuses to run in production.
+
+
+## Added in v1.1.0
+
+* **`GET /api/trace`** is read-only, needs `breaks:read` (every role), validates the reference (2–64 characters), upper-cases it and passes it as a bind parameter; a test sends SQL metacharacters. Rows are capped at 50 per side.
+* **Overview activity feed** is built from `source_files`, runs and decisions, not from `audit_events`, so it does not widen who can read the audit log. Sign-in events are never in it.
+* **Audit `hide=auth`** is an allow-listed enum; unknown values are a 400, so the filter cannot be used to smuggle SQL or silently hide other events.
+* **Browser storage** holds only per-viewer conveniences: theme (`bj.theme`), row density (`bj.density`) in `localStorage`, and the break-queue ids for previous/next in `sessionStorage`. No tokens or personal data. All reads and writes are wrapped so blocked storage degrades silently.
+* **Upload progress** uses `XMLHttpRequest` with the same cookie, CSRF header and content type as before; the server-side validation is unchanged and still authoritative (the client checks only the extension and emptiness as a convenience).

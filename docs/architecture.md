@@ -30,8 +30,9 @@ can be started separately (`npm run worker`).
 | `src/modules/runs` | Run creation (snapshot + fingerprint), durable worker, results queries. |
 | `src/modules/breaks` | Break queue, detail assembly, notes, CSV export. |
 | `src/modules/resolutions` | Maker-checker: propose and decide, with locking. |
-| `src/modules/audit`, `settings`, `overview` | Audit recording/querying, versioned settings, dashboard figures. |
-| `public/` | Frontend: `css/` design tokens + components, `js/` modules, `js/views/` one file per screen. |
+| `src/modules/audit`, `settings`, `overview` | Audit recording/querying, versioned settings, dashboard figures (counts, ageing buckets, recent activity). |
+| `src/modules/trace` | Read-only "what happened to this reference" lookup across all files and completed runs. |
+| `public/` | Frontend: `css/` design tokens (light and dark) + components, `js/` modules, `js/views/` one file per screen (overview, sources, runs, breaks, review, audit, settings, trace). |
 | `migrations/` | Ordered SQL files; applied by `npm run migrate`. |
 | `scripts/` | migrate, create-db, create-user, demo data + reset, benchmark, syntax check. |
 
@@ -79,6 +80,13 @@ Hash-routed SPA of ES modules; no framework, no build. `dom.js` builds nodes wit
 `textContent` (never `innerHTML` with data). `ui.js` holds shared components (tables, badges, dialogs,
 async regions with loading/error states). Filters live in the URL query so views are linkable and back/forward
 work. `permissions` from `/api/auth/session` only decide which controls to show; the server enforces everything.
+
+Supporting modules: `theme-init.js` (classic script in `<head>`: resolves the theme before first paint; see [ADR 0012](decisions/0012-theme-tokens-and-dark-mode.md)),
+`audit-text.js` (audit event → sentence), `guidance.js` (static "what to check" text per break type), `queue-context.js`
+(remembers the list a break was opened from), `templates.js` (starter CSV files; a unit test runs them through the server parsers).
+
+Tables are semantic `<table>`s with explicit ARIA roles; below 640 px each row becomes a labelled card through CSS only
+([ADR 0013](decisions/0013-tables-as-cards-on-phones.md)). Every colour comes from `css/tokens.css`; components contain no colour literals.
 
 ## Time
 

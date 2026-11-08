@@ -16,13 +16,15 @@ ALLOW_DEMO_RESET=true npm run demo:reset -- --yes --load-sample   # optional: de
 npm run dev
 ```
 
+Other useful commands: `npm run demo:scenarios -- --list` (generated data sets), `npm run screenshots` (re-captures `docs/screenshots/` from the running demo; Chrome required), `npm run bench -- --browser` (performance, see [docs/performance.md](docs/performance.md)).
+
 Tests use a separate database. The default is `postgres://localhost:5432/beetlejuice_test`; override with
 `TEST_DATABASE_URL`. The test helper refuses to touch a database whose name does not end in `_test`.
 
 ## Workflow
 
 * Branch from `dev` (`feat/…`, `fix/…`, `docs/…`); open a pull request into `dev`. `main` only receives
-  verified, tagged states.
+  verified, tagged states. A pull request template lists what to check.
 * Keep a change focused. Add or update tests in the same commit as the behaviour.
 * Before pushing: `npm run lint && npm test`. Both must pass; never weaken or delete a test to get green.
 * Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`,
@@ -39,7 +41,8 @@ Tests use a separate database. The default is `postgres://localhost:5432/beetlej
 * **Errors:** throw `AppError` helpers for expected failures; let unexpected ones reach the central handler.
   Never log secrets, passwords or session tokens.
 * **Frontend:** vanilla ES modules, no build step, no `innerHTML` with data, no inline `style` attributes or
-  scripts (the CSP forbids them). Use the tokens in `public/css/tokens.css`; do not hard-code colours.
+  scripts (the CSP forbids them). Use the tokens in `public/css/tokens.css`; do not hard-code colours, and check a new screen in **both** themes. New screens are covered by the axe test in `test/e2e/accessibility.test.js`: add the route to its `SCREENS` list.
+* **Data:** a new reconciliation situation belongs in `scripts/lib/scenario-library.js` with its expected outcome counted where it is injected (never taken from the engine); then `npm run demo:scenarios` to refresh the committed small sets.
 * Comments explain *why* (business rules, concurrency, security), not what the next line does.
 
 ## Migrations

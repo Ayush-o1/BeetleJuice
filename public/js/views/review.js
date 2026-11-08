@@ -31,6 +31,6 @@ route('/review', async ({ container, query }) => {
       ],
       rows: res.data, rowHref: (p) => `/breaks/${p.breakId}`,
       emptyNode: emptyState({ title: state.status === 'pending' ? 'Nothing is waiting for review' : 'No proposals here', body: state.status === 'pending' ? 'New proposals from analysts will appear in this queue.' : undefined }),
-    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p }); list.reload(); }, 'proposals')),
+    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p > 1 ? p : "" }); list.reload(); }, 'proposals')),
   });
 }, { title: 'Review queue', permission: 'proposals:read', nav: 'review' });
