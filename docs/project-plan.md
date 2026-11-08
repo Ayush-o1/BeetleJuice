@@ -47,6 +47,35 @@ the verification criterion for each phase. Status is updated as phases are compl
 
 ## Progress log
 
-Updated at each milestone; see git history for the detail.
+All phases were completed in one working session and verified before each commit. The final verification run
+(2026-11-08) is recorded below; `git log` has the per-milestone detail.
 
-- [x] Phase 0 — baseline recorded
+| Phase | Status | Evidence |
+|---|---|---|
+| 0 Baseline | done | this document; repo was empty, no license |
+| 1 Domain analysis | done | `docs/domain-model.md`, `docs/reconciliation-rules.md` |
+| 2 Architecture & database | done | migrations 0001–0005, ADRs 0001–0011 |
+| 3 Backend foundation | done | config validation, central errors, health, strict body parsing |
+| 4 Authentication & roles | done | `test/integration/auth.test.js`, `test/unit/security.test.js` |
+| 5 File ingestion | done | `test/unit/ingestion.test.js`, `test/integration/sources.test.js` |
+| 6 Financial domain | done | `test/unit/money.test.js`, `dates.test.js` |
+| 7 Reconciliation engine | done | `test/unit/engine.test.js` (25), `demo-data.test.js` ground truth |
+| 8 Background processing | done | claim race, retry, crash recovery, lease-loss tests in `runs.test.js` |
+| 9 Break management | done | queue/filter/detail tests in `workflow.test.js` |
+| 10 Maker-checker | done | concurrent-decision, stale-version, self-approval tests |
+| 11 Audit history | done | trigger tests, timeline, export |
+| 12–13 Design system & frontend | done | `public/`, visual review in Chrome at 1440 px and 390 px |
+| 14 Integration journeys | done | `test/e2e/browser.test.js` |
+| 15 Security review | done | `docs/security.md` (4 findings fixed, limits listed) |
+| 16 Performance | done | `docs/performance.md` (measured) |
+| 17 Final QA | done | clean-database setup verified; 99/99 tests passing; no secrets tracked |
+| 18 Release | done | see `CHANGELOG.md`; tag `v1.0.0` |
+
+### Defects found by testing during the build (and fixed)
+
+* Sort-key whitelist accepted `__proto__` (inherited property) → 500. Own-property check added.
+* Rejected uploads with a bad extension were not audited.
+* Over-long file names lost their extension and were rejected misleadingly.
+* A self-approval audit write inside the decision transaction would have deadlocked on the row lock it held.
+* The demo generator planted a "duplicate line id" row before the original; the parser was right, the generator was wrong.
+* `.figure.alert` collided with the `.alert` component class (visual bug); search input's accessible name differed from its label.
