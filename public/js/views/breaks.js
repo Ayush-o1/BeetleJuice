@@ -135,7 +135,7 @@ function renderBreak(b, reload) {
   if (b.proposals.length > 1 || (b.proposals.length === 1 && b.status !== 'pending_review')) right.push(historyPanel(b));
 
   return h('div', { class: 'stack' },
-    pageHead({ crumbs: [{ label: 'Breaks', href: '#/breaks' }, { label: `#${b.id}` }], title, sub: h('span', null, 'From ', h('a', { href: `#/runs/${b.runId}` }, `run #${b.runId}`), ' · ', r.groupKey && !isBatch ? `match key ${r.groupKey.replace('|', ' · ')}` : '') }),
+    pageHead({ crumbs: [{ label: 'Breaks', href: '#/breaks' }, { label: `#${b.id}` }], title, sub: h('span', null, 'From ', h('a', { href: `#/runs/${b.runId}` }, `run #${b.runId}`), r.groupKey && !isBatch ? ` · match key ${r.groupKey.replace('|', ' · ')}` : '') }),
     h('div', { class: 'split' }, h('div', { class: 'stack' }, left), h('div', { class: 'stack sticky' }, right)));
 }
 

@@ -40,24 +40,14 @@ export function renderShell(root, { onSignOut }) {
 
   const shell = h('div', { class: 'shell' });
   const closeNav = () => shell.classList.remove('nav-open');
-  const density = () => document.documentElement.dataset.density === 'compact';
-  const densityBtn = button({
-    label: density() ? 'Rows: compact' : 'Rows: comfortable', variant: 'ghost', small: true, title: 'Switch table row density', hideSm: true,
-    onClick: () => {
-      const next = density() ? 'comfortable' : 'compact';
-      document.documentElement.dataset.density = next;
-      try { localStorage.setItem('bj.density', next); } catch { /* storage may be blocked */ }
-      densityBtn.querySelector('span').textContent = next === 'compact' ? 'Rows: compact' : 'Rows: comfortable';
-    },
-  });
-  densityBtn.classList.add('hide-sm');
-  const signOut = button({ label: 'Sign out', icon: 'logout', variant: 'ghost', small: true, onClick: (e) => withBusy(e.currentTarget, onSignOut) });
+  const signOut = button({ label: 'Sign out', icon: 'logout', variant: 'ghost', small: true, ariaLabel: 'Sign out', onClick: (e) => withBusy(e.currentTarget, onSignOut) });
+  signOut.querySelector('span').classList.add('hide-xs');
 
   const topbar = h('header', { class: 'topbar' },
     button({ icon: 'menu', variant: 'ghost', ariaLabel: 'Open navigation', onClick: () => shell.classList.add('nav-open') }),
     badge('neutral', 'Synthetic data', 'badge-plain'),
     h('span', { class: 'spacer' }),
-    densityBtn,
+    displayMenu(),
     h('div', { class: 'user-chip' }, h('span', { class: 'name' }, session.user.displayName), badge('info', ROLES[session.user.role], 'badge-plain hide-sm')),
     signOut);
   topbar.firstChild.classList.add('menu-btn');
@@ -89,6 +79,22 @@ export function renderShell(root, { onSignOut }) {
     },
     refreshReviewCount,
   };
+}
+
+/** "Display" menu: theme and row density. Uses the native popover API (light dismiss, Esc, top layer). */
+function displayMenu() {
+  const group = (name, legend, options, current, onPick) => h('fieldset', { class: 'menu-group' }, h('legend', null, legend),
+    options.map(([value, label]) => h('label', { class: 'menu-opt' },
+      h('input', { type: 'radio', name, value, checked: value === current, onchange: () => onPick(value) }), h('span', null, label))));
+  const density = () => document.documentElement.dataset.density === 'compact' ? 'compact' : 'comfortable';
+  const pop = h('div', { id: 'display-menu', class: 'menu-pop', popover: 'auto', role: 'group', 'aria-label': 'Display settings' },
+    group('theme', 'Theme', [['system', 'Match system'], ['light', 'Light'], ['dark', 'Dark']], window.bjTheme.get(), (v) => window.bjTheme.set(v)),
+    group('density', 'Table rows', [['comfortable', 'Comfortable'], ['compact', 'Compact']], density(), (v) => {
+      document.documentElement.dataset.density = v;
+      try { localStorage.setItem('bj.density', v); } catch { /* storage may be blocked */ }
+    }));
+  const trigger = h('button', { class: 'btn btn-ghost btn-sm', type: 'button', popovertarget: 'display-menu', 'aria-label': 'Display settings', title: 'Display settings' }, icon('settings'), h('span', { class: 'hide-sm' }, 'Display'));
+  return h('div', { class: 'menu-wrap' }, trigger, pop);
 }
 
 export function renderLogin(root, { message, onSuccess }) {

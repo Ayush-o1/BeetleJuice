@@ -138,7 +138,7 @@ test('browser journey: analyst -> supervisor -> auditor', async (t) => {
   assert.equal(await u.page.locator('button:has-text("Submit for review")').count(), 0);
   await u.page.click('a.nav-link:has-text("Settings")');
   assert.equal(await u.page.locator('button:has-text("Save as new version")').count(), 0);
-  assert.equal(await u.page.locator('input').first().isDisabled(), true);
+  assert.equal(await u.page.locator('main input').first().isDisabled(), true);
   const status = await u.page.evaluate(async () => (await fetch('/api/settings', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: '{}' })).status);
   assert.equal(status, 403);
   await u.ctx.close();
