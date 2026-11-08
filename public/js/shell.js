@@ -144,7 +144,7 @@ export function renderLogin(root, { message, onSuccess }) {
   });
 
   const points = ['Upload ledger and processor settlement files', 'Match deterministically, with every outcome explained', 'Resolve breaks under maker-checker control', 'Keep an append-only audit history'];
-  root.append(h('div', { class: 'login-wrap' },
+  root.append(h('main', { class: 'login-wrap', id: 'main', tabindex: '-1' },
     h('div', { class: 'login-aside' },
       h('div', { class: 'brand' }, brandMark(), h('span', { class: 'brand-name' }, 'BeetleJuice')),
       h('div', null, h('h1', null, 'Settlement reconciliation, with every difference explained.'),

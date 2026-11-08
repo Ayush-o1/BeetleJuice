@@ -50,7 +50,7 @@ route('/sources', async ({ container, query }) => {
       ],
       rows: res.data, rowHref: (f) => `/sources/${f.id}`,
       emptyNode: emptyState({ title: 'No files uploaded', body: can('sources:upload') ? 'Upload a ledger export and a processor settlement export to begin.' : 'No source files have been uploaded yet.' }),
-    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p }); list.reload(); }, 'files')),
+    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p > 1 ? p : "" }); list.reload(); }, 'files')),
   });
 }, { title: 'Sources', permission: 'sources:read', nav: 'sources' });
 

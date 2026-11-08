@@ -39,7 +39,7 @@ route('/runs', async ({ container, query }) => {
       ],
       rows: res.data, rowHref: (r) => `/runs/${r.id}`,
       emptyNode: emptyState({ title: 'No runs yet', body: can('runs:create') ? 'Choose a ledger file and a settlement file to start the first run.' : 'No reconciliation runs have been started.' }),
-    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p }); list.reload(); }, 'runs')),
+    }), res.data.length > 0 && tableFoot(res.page, (p) => { state.page = p; setQuery({ page: p > 1 ? p : "" }); list.reload(); }, 'runs')),
   });
   // Poll only while something is queued or running.
   const timer = setInterval(() => { if (anyActive) list.reload(); }, 2500);

@@ -50,7 +50,7 @@ route('/audit', async ({ container, query }) => {
       ],
       rows: res.data,
       emptyNode: emptyState({ title: 'No events match', body: 'Adjust the filters to widen the search.' }),
-    }), res.data.length > 0 && tableFoot(res.page, (p) => { f.page = p; setQuery({ page: p }); list.reload(); }, 'events')),
+    }), res.data.length > 0 && tableFoot(res.page, (p) => { f.page = p; setQuery({ page: p > 1 ? p : "" }); list.reload(); }, 'events')),
   });
 }, { title: 'Audit log', permission: 'audit:read', nav: 'audit' });
 
