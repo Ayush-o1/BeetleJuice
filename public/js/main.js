@@ -9,6 +9,7 @@ import './views/breaks.js';
 import './views/review.js';
 import './views/audit.js';
 import './views/settings.js';
+import './views/trace.js';
 
 const root = document.getElementById('app');
 

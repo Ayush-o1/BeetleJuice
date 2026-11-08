@@ -5,6 +5,8 @@ import { asyncRegion, pageHead, panel, figures, figure, kv, button, badge, dataT
 import { formatDateTime, formatDate, formatInt, formatPaise, ageLabel, shortHash, parseRupeesInput, BREAK_TYPES, BREAK_STATUS, RESOLUTIONS, SIDES } from '../format.js';
 import { icon } from '../icons.js';
 import { can, session } from '../shell.js';
+import { GUIDANCE } from '../guidance.js';
+import { saveQueue, queuePosition } from '../queue-context.js';
 
 /* ---------- queue ---------- */
 
@@ -66,7 +68,7 @@ route('/breaks', async ({ container, query }) => {
 
   const list = asyncRegion(region, {
     load: () => api.get('/api/breaks', queryFor(f)),
-    render: (res) => h('div', null, dataTable({
+    render: (res) => { saveQueue(res.data.map((b) => b.id), location.hash); return h('div', null, dataTable({
       caption: 'Break queue', sort: f.sort, onSort: (key, dir) => apply({ sort: `${key}:${dir}` }),
       columns: [
         { label: 'Reference', sortKey: 'reference', render: (b) => h('div', null, h('a', { href: `#/breaks/${b.id}`, class: 'ref' }, b.reference || b.batchRef), h('span', { class: 'cell-sub' }, `Break #${b.id}`)) },
@@ -81,7 +83,7 @@ route('/breaks', async ({ container, query }) => {
       ],
       rows: res.data, rowHref: (b) => `/breaks/${b.id}`,
       emptyNode: emptyState({ title: 'No breaks match these filters', body: FILTER_KEYS.some((k) => f[k] && !(k === 'status' && f.status === 'unresolved')) ? 'Remove a filter to widen the search.' : 'There are no unresolved breaks. Completed runs that find differences will list them here.' }),
-    }), res.data.length > 0 && tableFoot(res.page, (p) => { f.page = p; setQuery({ page: p }); list.reload(); }, 'breaks')),
+    }), res.data.length > 0 && tableFoot(res.page, (p) => { f.page = p; setQuery({ page: p }); list.reload(); }, 'breaks')); },
   });
   drawChips();
 
@@ -110,6 +112,15 @@ route('/breaks/:id', async ({ container, params }) => {
   const region = h('div', { class: 'stack' });
   container.append(region);
   const list = asyncRegion(region, { load: async () => (await api.get(`/api/breaks/${params.id}`)).data, render: (b) => renderBreak(b, () => list.reload()) });
+  // [ and ] step through the list the user came from (ignored while typing or when a dialog is open).
+  const onKey = (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]')) return;
+    const pos = queuePosition(params.id);
+    const target = e.key === '[' ? pos?.prev : e.key === ']' ? pos?.next : null;
+    if (target) location.hash = `#/breaks/${target}`;
+  };
+  document.addEventListener('keydown', onKey);
+  return () => document.removeEventListener('keydown', onKey);
 }, { title: 'Break', permission: 'breaks:read', nav: 'breaks' });
 
 function renderBreak(b, reload) {
@@ -127,6 +138,7 @@ function renderBreak(b, reload) {
     figure('Age at run', ageLabel(b.ageAtRunDays), 'Frozen when the run executed'));
 
   const left = [panel('Finding', h('div', { class: 'panel-body stack' }, finding, figs), { flush: true })];
+  if (b.status !== 'resolved') left.push(guidancePanel(b));
   left.push(isBatch ? batchPanel(b) : comparePanel(b));
   if (!isBatch && (b.related.ledger.length || b.related.settlement.length)) left.push(relatedPanel(b));
   if (!isBatch && b.batch?.summary) left.push(batchContextPanel(b));
@@ -134,8 +146,13 @@ function renderBreak(b, reload) {
   const right = [resolutionPanel(b, reload), notesPanel(b, reload), timelinePanel(b)];
   if (b.proposals.length > 1 || (b.proposals.length === 1 && b.status !== 'pending_review')) right.push(historyPanel(b));
 
+  const pos = queuePosition(b.id);
+  const nav = pos && h('div', { class: 'queue-nav', role: 'group', 'aria-label': 'Break queue' },
+    button({ label: 'Previous', icon: 'chevron-left', small: true, href: pos.prev ? `#/breaks/${pos.prev}` : undefined, disabled: !pos.prev, title: 'Previous break in the list you came from ( [ )' }),
+    h('span', { class: 'muted', 'aria-live': 'polite' }, `${pos.index + 1} of ${pos.total}`),
+    button({ label: 'Next', icon: 'chevron-right', small: true, href: pos.next ? `#/breaks/${pos.next}` : undefined, disabled: !pos.next, title: 'Next break in the list you came from ( ] )' }));
   return h('div', { class: 'stack' },
-    pageHead({ crumbs: [{ label: 'Breaks', href: '#/breaks' }, { label: `#${b.id}` }], title, sub: h('span', null, 'From ', h('a', { href: `#/runs/${b.runId}` }, `run #${b.runId}`), r.groupKey && !isBatch ? ` · match key ${r.groupKey.replace('|', ' · ')}` : '') }),
+    pageHead({ crumbs: [{ label: 'Breaks', href: pos?.hash || '#/breaks' }, { label: `#${b.id}` }], actions: nav, title, sub: h('span', null, 'From ', h('a', { href: `#/runs/${b.runId}` }, `run #${b.runId}`), r.groupKey && !isBatch ? ` · match key ${r.groupKey.replace('|', ' · ')}` : '') }),
     h('div', { class: 'split' }, h('div', { class: 'stack' }, left), h('div', { class: 'stack sticky' }, right)));
 }
 
@@ -193,6 +210,16 @@ function batchContextPanel(b) {
     ['Batch result', result ? outcomeBadge(result.outcome) : '—'], ['Settled on', formatDate(summary.settledOn)], ['Declared gross', money(summary.declaredGrossPaise)],
     ['Declared fees', money(summary.declaredFeePaise)], ['Declared payout', money(summary.declaredPayoutPaise)], ['Explanation', result?.explanation],
   ])), { flush: false });
+}
+
+function guidancePanel(b) {
+  const g = GUIDANCE[b.type];
+  if (!g) return null;
+  return h('details', { class: 'panel guidance', open: b.status === 'open' && b.notes.length === 0 ? true : undefined },
+    h('summary', null, h('span', null, 'What to check'), h('span', { class: 'sub' }, g.summary)),
+    h('div', { class: 'panel-body' },
+      h('ul', null, g.checks.map((c) => h('li', null, c))),
+      h('p', { class: 'hint' }, 'Resolutions that usually apply: ', g.usually.map((c) => RESOLUTIONS[c]).join(' · '), '. This is guidance only; any resolution can be proposed and a supervisor still decides.')));
 }
 
 /* ---------- resolution workflow ---------- */

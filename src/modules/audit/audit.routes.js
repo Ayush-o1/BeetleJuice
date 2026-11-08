@@ -18,18 +18,20 @@ const filterSchema = z.object({
   breakId: z.coerce.number().int().positive().optional(),
   from: dateOnly.optional(),
   to: dateOnly.optional(),
+  hide: z.enum(['auth']).optional(),     // opt-in noise filter: sign-in/out events
 });
 const listSchema = z.object({ ...pagingSchema }).and(filterSchema);
 
-const SELECT = `SELECT a.id, a.occurred_at AS "occurredAt", a.actor_username AS "actor", a.actor_role AS "actorRole", a.action,
+const SELECT = `SELECT a.id, a.occurred_at AS "occurredAt", a.actor_username AS "actor", u.display_name AS "actorName", a.actor_role AS "actorRole", a.action,
   a.entity_type AS "entityType", a.entity_id AS "entityId", a.related_run_id AS "runId", a.related_break_id AS "breakId",
-  a.context, a.ip, a.request_id AS "requestId" FROM audit_events a`;
+  a.context, a.ip, a.request_id AS "requestId" FROM audit_events a LEFT JOIN users u ON u.id = a.actor_user_id`;
 
 function where(f) {
   const w = []; const p = [];
   const add = (sql, v) => { p.push(v); w.push(sql.replace('?', `$${p.length}`)); };
   // "auth." matches every action in that family; otherwise exact match.
   if (f.action) { if (f.action.endsWith('.')) add("a.action LIKE ?", `${f.action}%`); else add('a.action = ?', f.action); }
+  if (f.hide === 'auth') w.push("a.action NOT LIKE 'auth.%'");
   if (f.entityType) add('a.entity_type = ?', f.entityType);
   if (f.entityId) add('a.entity_id = ?', f.entityId);
   if (f.actor) add('a.actor_username = ?', f.actor.toLowerCase());

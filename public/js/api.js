@@ -47,9 +47,33 @@ export const api = {
   get: (path, query) => request('GET', path, { query }),
   post: (path, body) => request('POST', path, { body }),
   put: (path, body) => request('PUT', path, { body }),
-  upload: (kind, file) => request('POST', `/api/sources/${kind}`, {
-    raw: file, headers: { 'Content-Type': 'text/csv', 'X-Filename': encodeURIComponent(file.name) },
-  }),
+  upload: uploadWithProgress,
 };
+
+/**
+ * Upload with real byte progress (fetch cannot report upload progress). `onProgress(loaded, total)` is called with
+ * bytes actually handed to the network; once loaded === total the server is parsing and validating.
+ */
+function uploadWithProgress(kind, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `/api/sources/${kind}`);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('Content-Type', 'text/csv');
+    xhr.setRequestHeader('X-Filename', encodeURIComponent(file.name));
+    if (csrfToken) xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(e.loaded, e.total); };
+    xhr.onerror = () => reject(new ApiError(0, { error: { code: 'NETWORK', message: 'Cannot reach the server. Check your connection and try again.' } }));
+    xhr.onload = () => {
+      let json = null;
+      try { json = JSON.parse(xhr.responseText); } catch { /* non-JSON error page */ }
+      if (xhr.status >= 200 && xhr.status < 300) { resolve(json); return; }
+      if (xhr.status === 401) window.dispatchEvent(new CustomEvent('bj:session-expired'));
+      reject(new ApiError(xhr.status, json));
+    };
+    xhr.send(file);
+  });
+}
 
 export const exportUrl = (path, query) => `${path}${qs(query)}`;

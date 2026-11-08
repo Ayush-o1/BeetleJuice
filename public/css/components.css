@@ -219,3 +219,37 @@ pre.json { margin: 0; padding: 10px 12px; background: var(--surface-sunken); bor
   .data-table.stack-sm td:empty { display: none; }
   .data-table.stack-sm .cell-sub.truncate { max-width: 100%; white-space: normal; }
 }
+
+/* audit sentences + small checkbox filter */
+.data-table td.wrap { white-space: normal; min-width: 260px; max-width: 520px; padding-top: 8px; padding-bottom: 8px; }
+.evt { overflow-wrap: anywhere; }
+.evt-bad { color: var(--bad); } .evt-warn { color: var(--warn); }
+.check { display: inline-flex; align-items: center; gap: 8px; height: 34px; font-size: var(--fs-sm); color: var(--ink-2); cursor: pointer; }
+.check input { accent-color: var(--accent-solid); margin: 0; }
+.check:has(input:focus-visible) { box-shadow: var(--focus); border-radius: var(--radius); }
+
+/* overview: ageing bars + activity feed */
+.bar-fill.bar-warn { background: var(--warn); }
+.bar-fill.bar-bad { background: var(--bad); }
+.activity { list-style: none; margin: 0; padding: 4px 16px 8px; }
+.activity li { padding: 9px 0; border-top: 1px solid var(--border); font-size: var(--fs-sm); }
+.activity li:first-child { border-top: 0; }
+.activity .when { display: block; color: var(--ink-3); font-size: var(--fs-xs); margin-top: 1px; }
+
+/* break queue navigation + guidance */
+.queue-nav { display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); }
+.guidance > summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 10px; padding: 12px 16px; font-weight: 600; font-size: var(--fs-md); border-radius: var(--radius-lg); }
+.guidance > summary::-webkit-details-marker { display: none; }
+.guidance > summary::before { content: ''; width: 7px; height: 7px; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: rotate(-45deg); flex: none; align-self: center; transition: transform 120ms var(--ease); }
+.guidance[open] > summary::before { transform: rotate(45deg); }
+.guidance > summary .sub { font-weight: 400; color: var(--ink-2); font-size: var(--fs-sm); }
+.guidance[open] > summary { border-bottom: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.guidance ul { margin: 0 0 10px; padding-left: 18px; color: var(--ink-2); }
+.guidance li { margin: 4px 0; }
+
+/* upload progress */
+.upload-progress { display: flex; align-items: center; gap: 12px; font-size: var(--fs-sm); }
+.upload-bar { flex: 0 1 280px; height: 8px; border-radius: 4px; appearance: none; border: 0; background: var(--neutral-bg); overflow: hidden; }
+.upload-bar::-webkit-progress-bar { background: var(--neutral-bg); }
+.upload-bar::-webkit-progress-value { background: var(--accent-solid); transition: width 120ms linear; }
+.upload-bar::-moz-progress-bar { background: var(--accent-solid); }

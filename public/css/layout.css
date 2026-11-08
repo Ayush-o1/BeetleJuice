@@ -53,3 +53,10 @@ main { padding: var(--sp-5) var(--sp-6) var(--sp-7); width: 100%; max-width: 136
 }
 
 @media (max-width: 480px) { .hide-xs { display: none !important; } .user-chip .name { max-width: 112px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+
+/* topbar reference search */
+.topsearch { position: relative; width: 240px; max-width: 34vw; }
+.topsearch .icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--ink-3); pointer-events: none; }
+.topsearch .input { height: 30px; padding-left: 32px; font-size: var(--fs-sm); background: var(--surface-sunken); }
+@media (max-width: 900px) { .topsearch { width: 200px; } }
+@media (max-width: 640px) { .topbar { height: auto; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; } .topsearch { order: 10; flex: 1 0 100%; width: auto; max-width: none; } }

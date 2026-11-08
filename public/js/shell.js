@@ -2,6 +2,7 @@ import { h, clear } from './dom.js';
 import { icon, brandMark } from './icons.js';
 import { api, setCsrfToken } from './api.js';
 import { button, badge, withBusy, toast, field, alertBox } from './ui.js';
+import { navigate } from './router.js';
 import { ROLES } from './format.js';
 
 export const session = { user: null, permissions: [] };
@@ -46,6 +47,7 @@ export function renderShell(root, { onSignOut }) {
   const topbar = h('header', { class: 'topbar' },
     button({ icon: 'menu', variant: 'ghost', ariaLabel: 'Open navigation', onClick: () => shell.classList.add('nav-open') }),
     badge('neutral', 'Synthetic data', 'badge-plain'),
+    can('breaks:read') && referenceSearch(),
     h('span', { class: 'spacer' }),
     displayMenu(),
     h('div', { class: 'user-chip' }, h('span', { class: 'name' }, session.user.displayName), badge('info', ROLES[session.user.role], 'badge-plain hide-sm')),
@@ -79,6 +81,26 @@ export function renderShell(root, { onSignOut }) {
     },
     refreshReviewCount,
   };
+}
+
+/** Topbar "Find reference" box. "/" focuses it from anywhere except while typing. */
+function referenceSearch() {
+  const input = h('input', { class: 'input', type: 'search', name: 'reference', placeholder: 'Find reference…  ( / )', 'aria-label': 'Find a reference', autocomplete: 'off', spellcheck: 'false', maxlength: '64' });
+  const form = h('form', { class: 'topsearch', role: 'search' }, icon('search'), input);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = input.value.trim();
+    if (v.length < 2) return;
+    navigate('/trace', { reference: v });
+    input.blur();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || e.target.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]')) return;
+    e.preventDefault();
+    input.focus();
+    input.select();
+  });
+  return form;
 }
 
 /** "Display" menu: theme and row density. Uses the native popover API (light dismiss, Esc, top layer). */
