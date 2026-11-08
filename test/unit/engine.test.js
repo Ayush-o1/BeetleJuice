@@ -102,6 +102,12 @@ test('R09 ambiguity: repeated reference whose amounts do not pair is never guess
   assert.ok(t.every((r) => r.breakType === 'AMBIGUOUS_REFERENCE' && r.ruleId === 'R09'));
 });
 
+test('R09 one ledger entry vs two settlement lines that equal neither is ambiguous, not "mismatch plus duplicate"', () => {
+  const t = tx(run([led('L1', 'PAY-8', 10000)], [line('S1', 'PAY-8', 15000), line('S2', 'PAY-8', 15000)]));
+  assert.equal(t.length, 3);
+  assert.ok(t.every((r) => r.breakType === 'AMBIGUOUS_REFERENCE'));
+});
+
 test('repeated reference where one amount is exact: pair the exact one, leave the other to the window rules', () => {
   const l1 = led('L1', 'PAY-7', 10000, '2026-11-07');
   const l2 = led('L2', 'PAY-7', 20000, '2026-11-07');

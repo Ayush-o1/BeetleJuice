@@ -1,12 +1,12 @@
 {
   "name": "beetlejuice",
   "version": "1.0.0",
-  "description": "BeetleJuice — settlement reconciliation and break management for payment operations (synthetic-data simulation).",
+  "description": "BeetleJuice \u2014 settlement reconciliation and break management for payment operations (synthetic-data simulation).",
   "private": true,
   "license": "MIT",
   "type": "commonjs",
   "engines": {
-    "node": ">=20"
+    "node": ">=20.12"
   },
   "main": "src/server.js",
   "scripts": {
@@ -35,5 +35,18 @@
   },
   "devDependencies": {
     "playwright-core": "^1.65.0"
-  }
+  },
+  "author": "Ayush-o1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ayush-o1/BeetleJuice.git"
+  },
+  "keywords": [
+    "reconciliation",
+    "settlements",
+    "payments",
+    "fintech",
+    "postgresql",
+    "express"
+  ]
 }

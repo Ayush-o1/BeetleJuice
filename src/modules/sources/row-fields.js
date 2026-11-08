@@ -70,7 +70,7 @@ class RowChecker {
     try {
       paise = parseRupees(v);
     } catch (e) {
-      if (e instanceof MoneyError) return this.fail(field, e.code, `${field}: ${e.message}`);
+      if (e instanceof MoneyError) return this.fail(field, e.code, e.message);
       throw e;
     }
     if (paise === 0 && !allowZero) return this.fail(field, 'AMOUNT_ZERO', `${field} must not be zero`);
