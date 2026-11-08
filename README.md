@@ -122,10 +122,9 @@ Stack: Node.js, Express 5, `pg`, zod, helmet, pino, csv-parse. No ORM, no front-
 
 ## Testing
 
-98+ automated tests: unit (engine rules, money, dates, parsers, permissions), integration against real PostgreSQL
+99 automated tests (all passing at v1.0.0, none skipped when Chrome is installed): unit (engine rules, money, dates, parsers, permissions), integration against real PostgreSQL
 (including concurrent uploads, runs and reviewer decisions, worker crash recovery, and constraints with the service
-layer bypassed) and Chrome end-to-end journeys across all three roles. Run `npm test`; exact current totals are in
-the release notes. The demo files are checked against a ground truth the generator constructs.
+layer bypassed) and Chrome end-to-end journeys across all three roles. Run `npm test`. The demo files are checked against a ground truth the generator constructs.
 
 ## Limitations (stated plainly)
 
