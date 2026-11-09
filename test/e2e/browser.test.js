@@ -118,8 +118,9 @@ test('browser journey: analyst -> supervisor -> auditor', async (t) => {
   await s.page.waitForSelector('.nav-count:has-text("1")');
   await s.page.click('a.nav-link:has-text("Review queue")');
   await s.page.click('a:has-text("PAY-1002")');
-  await s.page.waitForSelector('text=Correct the ledger');
-  await s.page.click('button:has-text("Approve")');
+  // the proposal itself, not the (collapsed) "What to check" hint that also mentions the resolution
+  await s.page.waitForSelector('.badge:has-text("Awaiting review") ~ strong:has-text("Correct the ledger")');
+  await s.page.getByRole('button', { name: 'Approve', exact: true }).click();
   await s.page.click('dialog button[type=submit]');
   await s.page.waitForSelector('text=Resolved: Correct the ledger');
   await s.page.click('a.nav-link:has-text("Settings")');

@@ -30,4 +30,12 @@ jobs:
       - run: npm ci
       - run: npm run lint
       # Unit, integration and browser end-to-end tests (the runner image ships Google Chrome).
-      - run: npm test
+      - name: Test
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test.log
+      # Job logs need a GitHub login to read; annotations do not. On failure, surface the failing tests as one.
+      - name: Surface failing tests as an annotation
+        if: failure()
+        run: |
+          awk '/failing tests:/{f=1} f' test.log | head -c 12000 | python3 -c "import sys; t = sys.stdin.read() or 'npm test failed before the test summary (see the job log)'; print('::error title=Failing tests::' + t.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))"

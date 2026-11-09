@@ -59,7 +59,13 @@ export function startRouter({ container, onRoute, resolveUser, notFound, forbidd
     if (!firstRender) $focusMain();
     firstRender = false;
   }
-  const $focusMain = () => document.getElementById('main')?.focus({ preventScroll: true });
+  // Never take focus back from a control inside the new view: a slow view can finish after the user has already
+  // tabbed to something in it.
+  const $focusMain = () => {
+    const main = document.getElementById('main');
+    if (!main || (main.contains(document.activeElement) && document.activeElement !== main)) return;
+    main.focus({ preventScroll: true });
+  };
   if (listener) window.removeEventListener('hashchange', listener);
   listener = render;
   window.addEventListener('hashchange', render);

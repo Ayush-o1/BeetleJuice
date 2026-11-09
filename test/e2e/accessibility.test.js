@@ -62,8 +62,9 @@ test('axe: login screen, an open modal dialog and the open Display menu are clea
     for (const v of await axeViolations(p2)) found.push(`display-menu/${colorScheme}: ${v}`);
     await p2.keyboard.press('Escape');
     await p2.goto(`${app.base}/#/review`); await settle(p2);
-    await p2.click('td a.ref'); await p2.waitForSelector('button:has-text("Approve")');
-    await p2.click('button:has-text("Approve")'); await p2.waitForSelector('dialog[open]'); await settle(p2);
+    await p2.click('td a.ref');
+    // exact name: the review queue's "Approved" tab also contains the text "Approve"
+    await p2.getByRole('button', { name: 'Approve', exact: true }).click(); await p2.waitForSelector('dialog[open]'); await settle(p2);
     for (const v of await axeViolations(p2)) found.push(`dialog/${colorScheme}: ${v}`);
     await c2.close();
   }
@@ -88,11 +89,15 @@ test('keyboard: the skip link is the first tab stop and moves focus to the main 
   if (skipReason) return t.skip(skipReason);
   const { ctx, page } = await open('analyst');
   await page.goto(`${app.base}/#/breaks`); await settle(page);
-  await page.reload(); await settle(page);          // a fresh page load: focus starts at the top of the document
+  await page.reload(); await page.waitForSelector('main h1'); await settle(page);   // a fresh page load: focus starts at the top of the document
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(() => document.activeElement.className), 'skip-link');
   await page.keyboard.press('Enter');
   assert.equal(await page.evaluate(() => document.activeElement.id), 'main');
+  // the link must not be read as a route: the page stays where it was
+  await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => location.hash), '#/breaks', 'the skip link leaves the address alone');
+  assert.equal(await page.locator('main h1').innerText(), 'Breaks', 'the skip link does not replace the page');
   await ctx.close();
 });
 
@@ -132,8 +137,11 @@ test('keyboard: a decision dialog traps focus, Escape cancels without deciding, 
   if (skipReason) return t.skip(skipReason);
   const { ctx, page } = await open('supervisor');
   await page.goto(`${app.base}/#/review`); await settle(page);
-  await page.click('td a.ref'); await page.waitForSelector('button:has-text("Approve")'); await settle(page);
-  await page.focus('button:has-text("Approve")');
+  await page.click('td a.ref'); await page.waitForFunction(() => /^#\/breaks\/\d+/.test(location.hash)); await settle(page);
+  // exact name: the review queue's "Approved" tab also contains the text "Approve"
+  const approve = page.getByRole('button', { name: 'Approve', exact: true });
+  await approve.waitFor();
+  await approve.focus();
   const focused = await page.evaluate(() => document.activeElement?.textContent?.trim());
   assert.match(focused || '', /Approve/, `the Approve button must hold focus before Enter (active element: ${focused})`);
   await page.keyboard.press('Enter');
@@ -151,7 +159,7 @@ test('keyboard: a decision dialog traps focus, Escape cancels without deciding, 
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('dialog'));
   assert.match(await page.evaluate(() => document.activeElement.textContent), /Approve/);
-  assert.equal(await page.locator('button:has-text("Approve")').count(), 1, 'nothing was decided');
+  assert.equal(await approve.count(), 1, 'nothing was decided');
   await ctx.close();
 });
 

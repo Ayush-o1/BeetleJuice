@@ -23,7 +23,7 @@ login page landmark and working skip link; focus stays under the skip link on fi
 * `npm run bench` now also times the HTTP API and (`--browser`) Chrome rendering; [docs/performance.md](docs/performance.md) re-measured.
 * New dev dependency: `axe-core`.
 
-**Fixed:** pagination wrote `page=1` into the URL; "From run #1 ·" dangling separator on batch breaks; the review queue's action column was clipped at 1440 px.
+**Fixed:** the "Skip to content" link replaced the page with "Page not found" (the hash router read `#main` as a route; present since v1.0.0); the router no longer takes focus back from a control the user already reached in a slowly loading view; pagination wrote `page=1` into the URL; "From run #1 ·" dangling separator on batch breaks; the review queue's action column was clipped at 1440 px.
 
 **Documentation:** README rewritten around real screenshots (`npm run screenshots`), research notes, troubleshooting, ADRs 0012–0015, PR template.
 

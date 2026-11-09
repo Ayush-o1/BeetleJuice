@@ -65,6 +65,7 @@ Severity: **High** = wrong or blocks a task, **Med** = costs the user time or tr
 | H4 | Low | Pagination wrote `page=1` into the URL when returning to the first page | Fixed |
 | H5 | Med | Filter-chip remove buttons (20 px), sort-header buttons (17 px) and `<summary>` (20 px) were below the 24 px WCAG 2.2 target size | Fixed, now tested |
 | H6 | Low | Sticky top bar could in principle cover keyboard focus when scrolling | `scroll-padding-top` added; tested by tabbing 40 stops down a long list |
+| H7 | Med | The "Skip to content" link (`href="#main"`) was read by the hash router as a route: activating it replaced the page with "Page not found". Present since v1.0.0; found because a keyboard test failed under CPU load | Fixed: handled by a classic head script (`skip-link.js`) that moves focus without touching the address; the test now also asserts the page is unchanged |
 
 ## Not verified
 
